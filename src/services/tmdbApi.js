@@ -1,58 +1,46 @@
 // src/services/tmdbApi.js
 import axios from 'axios';
 
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-const BASE_URL = 'https://api.themoviedb.org/3';
-
+// No API key here!
+// The base URL is now our *own* serverless function
 const apiClient = axios.create({
-  baseURL: BASE_URL,
-  params: {
-    api_key: API_KEY,
-  },
+  baseURL: '/.netlify/functions/tmdb',
 });
 
-/**
- * Fetches trending movies for a specific page.
- * @param {number} page - The page number to fetch.
- * @returns {Promise<Object>} A promise that resolves to the API response.
- */
-export const getTrendingMovies = (page = 1) => { // 1. Add page parameter
-  return apiClient.get('/trending/movie/week', {
+// We now pass the TMDB path as a 'path' parameter
+// The function at /tmdb will add the secret key
+export const getTrendingMovies = (page = 1) => {
+  return apiClient.get('', {
     params: {
-      page: page, // 2. Pass page to the API
+      path: '/trending/movie/week',
+      page: page,
     },
   });
 };
 
-/**
- * Searches for movies based on a query and page.
- * @param {string} query - The search term.
- * @param {number} page - The page number to fetch.
- * @returns {Promise<Object>} A promise that resolves to the API response.
- */
-export const searchMovies = (query, page = 1) => { // 3. Add page parameter
-  return apiClient.get('/search/movie', {
+export const searchMovies = (query, page = 1) => {
+  return apiClient.get('', {
     params: {
+      path: '/search/movie',
       query: query,
-      page: page, // 4. Pass page to the API
+      page: page,
     },
   });
 };
 
-/**
- * Fetches details for a specific movie, including videos.
- */
 export const getMovieDetails = (movieId) => {
-  return apiClient.get(`/movie/${movieId}`, {
+  return apiClient.get('', {
     params: {
+      path: `/movie/${movieId}`,
       append_to_response: 'videos',
     },
   });
 };
 
-/**
- * Fetches recommended movies for a specific movie.
- */
 export const getRecommendedMovies = (movieId) => {
-  return apiClient.get(`/movie/${movieId}/recommendations`);
+  return apiClient.get('', {
+    params: {
+      path: `/movie/${movieId}/recommendations`,
+    },
+  });
 };
