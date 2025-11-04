@@ -1,5 +1,5 @@
 // netlify/functions/tmdb.js
-import axios from 'axios';
+import { default as axios } from 'axios';
 
 // Get the private key from Netlify's environment variables
 const API_KEY = process.env.TMDB_API_KEY;
