@@ -21,27 +21,45 @@ const MovieDetailsPage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Scroll to top
+    window.scrollTo(0, 0);
+
     const fetchAllData = async () => {
       try {
         setLoading(true);
-        setTrailerKey(null); // Reset key
+        setTrailerKey(null);
         setShowPlayer(false);
         
         const [detailsResponse, recommendResponse] = await Promise.all([
           getMovieDetails(id),
           getRecommendedMovies(id) 
         ]);
-        
-        setMovie(detailsResponse.data);
-        setRecommendedMovies(recommendResponse.data.results); 
 
-        // 3. Find the best YouTube video
-        const videos = detailsResponse.data?.videos?.results || [];
+        // --- 💡 THIS IS THE FIX ---
+        // Check for the 'body' property from the Netlify Function
+        let movieData;
+        if (detailsResponse.data.body) {
+          movieData = JSON.parse(detailsResponse.data.body);
+        } else {
+          movieData = detailsResponse.data;
+        }
+
+        let recommendationsData;
+        if (recommendResponse.data.body) {
+          recommendationsData = JSON.parse(recommendResponse.data.body);
+        } else {
+          recommendationsData = recommendResponse.data;
+        }
+        // --- END OF FIX ---
+        
+        setMovie(movieData);
+        setRecommendedMovies(recommendationsData.results); 
+
+        const videos = movieData?.videos?.results || [];
         const videoToPlay = 
           videos.find((video) => video.site === 'YouTube' && video.type === 'Trailer') ||
           videos.find((video) => video.site === 'YouTube');
 
-        // 4. Just save the key
         if (videoToPlay) {
           setTrailerKey(videoToPlay.key);
         }
