@@ -1,27 +1,27 @@
 // src/pages/MovieDetailsPage.jsx
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { getMovieDetails, getRecommendedMovies } from '../services/tmdbApi';
+import { useParams, Link } from 'react-router-dom';
+import { getMovieDetails, getRecommendedMovies, getMovieCredits } from '../services/tmdbApi';
 import { Container, Row, Col, Image, Spinner, Alert, Badge, Button } from 'react-bootstrap'; 
-import { FaStar, FaClock, FaPlayCircle } from 'react-icons/fa';
+import { FaStar, FaClock, FaPlayCircle, FaHeart, FaRegHeart } from 'react-icons/fa'; 
 import MovieCard from '../components/MovieCard';
-import YouTube from 'react-youtube'; // 1. Import the new player
+import YouTube from 'react-youtube';
+import { addFavorite, removeFavorite, isFavorite } from '../utils/favorites'; 
 
 const MovieDetailsPage = () => {
   const { id } = useParams();
   const [movie, setMovie] = useState(null);
   const [recommendedMovies, setRecommendedMovies] = useState([]);
-  
-  // 2. We only need the video *key* now, not the full URL
+  const [cast, setCast] = useState([]);
+  const [rating, setRating] = useState('');
   const [trailerKey, setTrailerKey] = useState(null); 
   const [showPlayer, setShowPlayer] = useState(false); 
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFav, setIsFav] = useState(false);
 
   useEffect(() => {
-    // Scroll to top
     window.scrollTo(0, 0);
 
     const fetchAllData = async () => {
@@ -29,40 +29,52 @@ const MovieDetailsPage = () => {
         setLoading(true);
         setTrailerKey(null);
         setShowPlayer(false);
+        setRating(''); 
         
-        const [detailsResponse, recommendResponse] = await Promise.all([
-          getMovieDetails(id),
-          getRecommendedMovies(id) 
+        const [detailsResponse, recommendResponse, creditsResponse] = await Promise.all([
+          getMovieDetails(id), 
+          getRecommendedMovies(id),
+          getMovieCredits(id) 
         ]);
 
-        // --- 💡 THIS IS THE FIX ---
-        // Check for the 'body' property from the Netlify Function
-        let movieData;
-        if (detailsResponse.data.body) {
-          movieData = JSON.parse(detailsResponse.data.body);
-        } else {
-          movieData = detailsResponse.data;
-        }
+        const parseData = (res) => res.data.body ? JSON.parse(res.data.body) : res.data;
 
-        let recommendationsData;
-        if (recommendResponse.data.body) {
-          recommendationsData = JSON.parse(recommendResponse.data.body);
-        } else {
-          recommendationsData = recommendResponse.data;
-        }
-        // --- END OF FIX ---
+        const movieData = parseData(detailsResponse);
+        const recommendationsData = parseData(recommendResponse);
+        const creditsData = parseData(creditsResponse); 
         
         setMovie(movieData);
-        setRecommendedMovies(recommendationsData.results); 
+        setRecommendedMovies(recommendationsData.results || []); 
+        setCast(creditsData.cast || []); 
+        setIsFav(isFavorite(movieData.id));
 
+        // --- RATING LOGIC ---
+        const usRelease = movieData.release_dates?.results.find(
+          (r) => r.iso_3166_1 === 'US'
+        );
+        let certification = usRelease?.release_dates.find(
+          (r) => r.certification
+        )?.certification;
+        if (!certification) {
+          const anyRelease = movieData.release_dates?.results.find(
+            (r) => r.release_dates.length > 0 && r.release_dates.find(d => d.certification)
+          );
+          if (anyRelease) {
+            certification = anyRelease.release_dates.find(d => d.certification).certification;
+          }
+        }
+        setRating(certification || 'NR');
+        // --- END RATING ---
+
+        // --- TRAILER LOGIC ---
         const videos = movieData?.videos?.results || [];
         const videoToPlay = 
           videos.find((video) => video.site === 'YouTube' && video.type === 'Trailer') ||
           videos.find((video) => video.site === 'YouTube');
-
         if (videoToPlay) {
           setTrailerKey(videoToPlay.key);
         }
+        // --- END TRAILER ---
 
         setError(null);
 
@@ -77,6 +89,15 @@ const MovieDetailsPage = () => {
     fetchAllData();
   }, [id]); 
 
+  const handleFavoriteClick = () => {
+    if (isFav) {
+      removeFavorite(movie.id);
+      setIsFav(false);
+    } else {
+      addFavorite(movie);
+      setIsFav(true);
+    }
+  };
 
   if (loading) {
     return (
@@ -95,25 +116,35 @@ const MovieDetailsPage = () => {
   }
   if (!movie) return null; 
 
-  const getImageUrl = (path) => `https://image.tmdb.org/t/p/w500${path}`;
+  const getImageUrl = (path, size = "w500") => `https://image.tmdb.org/t/p/${size}${path}`;
 
-  // 5. Options for the react-youtube player
   const playerOptions = {
     height: '100%',
     width: '100%',
-    playerVars: {
-      autoplay: 1,
-    },
+    playerVars: { autoplay: 1 },
   };
 
   return (
-    <Container className="mt-5">
+    <Container className="mt-5 pb-5"> 
       <Row>
         <Col md={4} className="text-center text-md-start">
           <Image src={getImageUrl(movie.poster_path)} fluid rounded />
         </Col>
         <Col md={8}>
-          <h2>{movie.title}</h2>
+          
+          <div className="d-flex align-items-center mb-2">
+            <h2 className="mb-0 me-3">{movie.title}</h2>
+            <Button
+              variant="link"
+              className="p-0 fs-3 text-danger"
+              onClick={handleFavoriteClick}
+              aria-label="Add to favorites"
+              style={{ textDecoration: 'none' }}
+            >
+              {isFav ? <FaHeart /> : <FaRegHeart />}
+            </Button>
+          </div>
+
           <p className="text-muted">{movie.tagline}</p>
           <p>{movie.overview}</p>
           
@@ -127,23 +158,46 @@ const MovieDetailsPage = () => {
             <FaClock className="me-1" /> {movie.runtime} minutes
           </div>
 
+          {/* --- 💡 UPDATED GENRES SECTION 💡 --- */}
           <div className="mb-3">
             <strong>Genres: </strong>
             {movie.genres.map(genre => (
-              <Badge pill bg="info" className="me-2" key={genre.id}>
-                {genre.name}
-              </Badge>
+              // Wrap the Badge in a Link
+              <Link 
+                to={`/discover/genre/${genre.id}`}
+                key={genre.id}
+                state={{ genreName: genre.name }} // Pass the genre name to the new page
+                className="text-decoration-none"
+              >
+                <Badge 
+                  pill 
+                  bg="info" 
+                  className="me-2" 
+                  style={{cursor: 'pointer'}} // Add pointer cursor
+                >
+                  {genre.name}
+                </Badge>
+              </Link>
             ))}
           </div>
+          {/* --- END OF UPDATE --- */}
+
+          {rating && (
+            <div className="mb-3">
+              <strong>Parental Rating: </strong>
+              <Badge pill bg="info" className="me-2">
+                {rating}
+              </Badge>
+            </div>
+          )}
 
           <a href={movie.homepage} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
             Visit Website
           </a>
 
-          {/* 6. Button logic is the same */}
           {trailerKey && (
             <Button 
-              variant="outline-dark"
+              variant="outline-light"
               className="ms-2" 
               onClick={() => setShowPlayer(!showPlayer)}
             >
@@ -152,20 +206,44 @@ const MovieDetailsPage = () => {
             </Button>
           )}
 
-          {/* 7. Render the new <YouTube> component */}
           {showPlayer && trailerKey && (
-            // --- 💡 UPDATED THIS LINE ---
             <div className="ratio ratio-16x9 mt-4 rounded overflow-hidden">
               <YouTube 
                 videoId={trailerKey} 
                 opts={playerOptions}
-                className="youtube-player" // For direct styling
+                className="youtube-player"
                 style={{ width: '100%', height: '100%' }}
               />
             </div>
           )}
         </Col>
       </Row>
+
+      {/* --- CAST SECTION --- */}
+      <hr className="my-5" />
+      <h3 className="mb-4">Top Cast</h3>
+      <div className="cast-scroller">
+        <Row className="flex-nowrap">
+          {cast.slice(0, 10).map((actor) => ( 
+            <Col xs={4} sm={3} md={2} key={actor.cast_id} className="cast-card">
+              <Link 
+                to={`/person/${actor.id}`} 
+                className="text-decoration-none text-light"
+              >
+                <Image 
+                  src={actor.profile_path ? getImageUrl(actor.profile_path, "w200") : 'https://via.placeholder.com/200x300.png?text=No+Image'} 
+                  roundedCircle 
+                  className="cast-img"
+                />
+                <strong className="d-block mt-2">{actor.name}</strong>
+                <span className="text-white-50">{actor.character}</span>
+              </Link>
+            </Col>
+          ))}
+        </Row>
+      </div>
+      {/* --- END OF CAST SECTION --- */}
+
 
       {/* --- Recommendations Section --- */}
       <hr className="my-5" />
@@ -181,7 +259,7 @@ const MovieDetailsPage = () => {
           </Col>
         )}
       </Row>
-    </Container>
+    </Container> 
   );
 };
 

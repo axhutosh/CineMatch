@@ -1,10 +1,8 @@
 /* src/App.css */
+
+/* --- GLOBAL STYLES --- */
 body {
   margin: 0;
-  background-color: #f8f9fa;
-  color: #333;
-  
-  /* Apply the new fonts */
   font-family: 'Lato', sans-serif;
 }
 
@@ -19,21 +17,19 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
 }
-/* src/App.css */
 
-/* --- Card Hover Animation --- */
-.card {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+/* --- LAYOUT --- */
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-.card:hover {
-  transform: scale(1.03); /* Enlarge the card */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Add a more pronounced shadow */
-  z-index: 10;
+.main-content {
+  flex-grow: 1;
 }
-/* src/App.css */
 
-/* --- Fade-in Animation --- */
+/* --- ANIMATIONS --- */
 .container {
   animation: fadeIn 0.5s ease-in-out;
 }
@@ -48,47 +44,171 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
     transform: translateY(0);
   }
 }
-/* src/App.css */
+
+/* --- COMPONENT STYLES --- */
+
+/* --- Card --- */
+.card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
 
 /* --- Custom "No Image" Placeholder --- */
 .no-image-placeholder {
   width: 100%;
-  /* This calculates the height to maintain a movie poster aspect ratio */
   aspect-ratio: 2 / 3; 
-  background-color: #e9ecef;
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #adb5bd;
   text-align: center;
   font-size: 1rem;
   font-weight: 600;
   padding: 10px;
 }
-/* src/App.css */
 
-/* ... (your existing body, h1, etc. styles) ... */
-
-/* This makes our main .App container fill at least
-  the full height of the viewport.
-*/
-.App {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+/* --- Cast Scroller Styles --- */
+.cast-scroller {
+  overflow-x: auto;
+  padding-bottom: 15px;
+  padding-top: 15px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* This makes our main content (the <Routes>)
-  grow to fill any available space.
-*/
-.main-content {
-  flex-grow: 1;
+.cast-scroller::-webkit-scrollbar {
+  display: none;
 }
 
-/* This is for our new footer component.
-  mt-auto (margin-top: auto) is what pushes it
-  to the bottom of the .App container.
-*/
+.cast-card {
+  text-align: center;
+  font-size: 0.85rem;
+  margin: 0 10px; 
+  flex-shrink: 0;
+  width: 150px;
+}
+
+.cast-img {
+  width: 130px;
+  height: 130px;
+  object-fit: contain;
+  border-radius: 50%;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.cast-img:hover {
+  transform: scale(1.08);
+}
+
+@media (max-width: 576px) {
+  .cast-card {
+    width: 120px;
+  }
+  .cast-img {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+/* --- Footer --- */
 .footer {
-  flex-shrink: 0; /* Prevents footer from shrinking */
+  flex-shrink: 0;
+}
+
+.footer-name {
+  font-family: 'Great Vibes', cursive;
+  font-size: 1.25rem;
+  color: #1abc9c;
+  margin: 0; 
+}
+
+/* --- Search Suggestions --- */
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* --- Utility Button Style --- */
+/* This removes all default styling from a react-bootstrap Button */
+.btn-no-style {
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+.btn-no-style:hover, 
+.btn-no-style:active, 
+.btn-no-style:focus {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+
+
+/* --- 💡 DARK THEME STYLES 💡 --- */
+
+/* 1. Sets the default body background */
+body[data-bs-theme="dark"] {
+  background-color: #212529; /* Bootstrap's dark color */
+  color: #dee2e6; /* A light gray for text */
+}
+
+/* 2. Adds subtle borders to "merge" Navbar and Footer */
+.navbar {
+  background-color: #212529;
+}
+
+.footer {
+  border-top: 1px solid #343a40; /* A faint dark line */
+  background-color: #212529 !important; 
+}
+
+/* 3. Updates Card shadows for dark mode */
+.card {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); 
+}
+
+.card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+/* 4. Updates Cast Image for dark mode */
+.cast-img {
+  background-color: #343a40; /* Darker placeholder bg */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.cast-img:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* 5. Updates "No Image" placeholder for dark mode */
+.no-image-placeholder {
+  background-color: #343a40; /* Darker bg */
+  color: #6c757d; /* Muted text */
+}
+/* --- 💡 UPDATED HEART ICON STYLES 💡 --- */
+
+/* 6. Default state for icons */
+.favorite-button svg {
+  color: #dee2e6; /* Default: empty heart is light gray/white */
+  transition: all 0.2s ease-in-out;
+}
+.favorite-button.is-favorite svg {
+  color: #dc3545; /* Default: *filled* heart is red */
+}
+
+/* 7. Hover state for icons */
+.favorite-button:hover svg {
+  color: #dc3545 !important; /* On hover, *any* heart turns RED */
+  filter: drop-shadow(0 0 5px rgba(220, 53, 69, 0.5)); /* Red glow */
+  transform: scale(1.1);
 }

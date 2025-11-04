@@ -2,9 +2,12 @@
 import React, { useState } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import AppNavbar from './components/layout/Navbar';
-import Footer from './components/layout/Footer'; // 1. Import Footer
+import Footer from './components/layout/Footer';
 import HomePage from './pages/HomePage';
 import MovieDetailsPage from './pages/MovieDetailsPage';
+import PersonDetailsPage from './pages/PersonDetailsPage';
+import FavoritesPage from './pages/FavoritesPage';
+import DiscoverPage from './pages/DiscoverPage'; // 1. Import DiscoverPage
 import './App.css';
 
 function App() {
@@ -33,11 +36,9 @@ function App() {
   };
 
   return (
-    // 2. The main .App div now controls the layout
-    <div className="App">
+    <div className="App" data-bs-theme="dark">
       <AppNavbar onSearch={handleSearch} onHomeClick={handleClearSearch} />
       
-      {/* 3. Wrap Routes in a div to make it grow */}
       <div className="main-content">
         <Routes>
           <Route 
@@ -56,10 +57,23 @@ function App() {
             path="/movie/:id" 
             element={<MovieDetailsPage />} 
           />
+          <Route 
+            path="/person/:id" 
+            element={<PersonDetailsPage />} 
+          />
+          <Route 
+            path="/favorites" 
+            element={<FavoritesPage />} 
+          />
+          {/* 2. ADD THE NEW ROUTE FOR DISCOVER */}
+          <Route 
+            path="/discover/genre/:genreId" 
+            element={<DiscoverPage />} 
+          />
         </Routes>
       </div>
       
-      <Footer /> {/* 4. Add the Footer at the bottom */}
+      <Footer />
     </div>
   );
 }

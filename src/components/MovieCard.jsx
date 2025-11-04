@@ -1,17 +1,43 @@
 // src/components/MovieCard.jsx
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Col, Card } from 'react-bootstrap';
-import { FaStar } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Col, Card, Button } from 'react-bootstrap';
+import { FaStar, FaHeart, FaRegHeart } from 'react-icons/fa';
+import { addFavorite, removeFavorite, isFavorite } from '../utils/favorites';
 
 const MovieCard = ({ movie }) => {
+  const [isFav, setIsFav] = useState(movie ? isFavorite(movie.id) : false);
+  const navigate = useNavigate();
+
+  if (!movie) {
+    return null;
+  }
+
+  const handleFavoriteClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (isFav) {
+      removeFavorite(movie.id);
+      setIsFav(false);
+    } else {
+      addFavorite(movie); 
+      setIsFav(true);
+    }
+  };
+  
+  const handleCardClick = () => {
+    navigate(`/movie/${movie.id}`);
+  };
+  
+  const displayRating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
+
   return (
-    // Link now wraps the Col and holds the key.
-    // text-decoration-none removes the link underline.
-    <Link to={`/movie/${movie.id}`} className="text-decoration-none">
-      <Col>
-        <Card className="h-100 shadow-sm">
-          {/* --- IMAGE LOGIC --- */}
+    <Col onClick={handleCardClick} style={{ cursor: 'pointer' }}>
+      <Card className="h-100 shadow-sm">
+        
+        {/* Poster section */}
+        <div className="position-relative">
           {movie.poster_path ? (
             <Card.Img
               variant="top"
@@ -23,20 +49,32 @@ const MovieCard = ({ movie }) => {
               <span>{movie.title}</span>
             </div>
           )}
-          {/* --- END OF IMAGE LOGIC --- */}
-          
-          <Card.Body className="d-flex flex-column">
-            <Card.Title className="fs-6 fw-bold mb-2" style={{minHeight: '40px'}}>
-              {movie.title}
-            </Card.Title>
-            <Card.Text className="text-muted mt-auto">
+        </div>
+        
+        <Card.Body className="d-flex flex-column">
+          <Card.Title className="fs-6 fw-bold mb-2" style={{minHeight: '40px'}}>
+            {movie.title}
+          </Card.Title>
+          <div className="d-flex justify-content-between align-items-center mt-auto">
+            <Card.Text className="text-muted mb-0">
               <FaStar className="text-warning mb-1" />
-              {' '} {movie.vote_average.toFixed(1)}
+              {' '} {displayRating}
             </Card.Text>
-          </Card.Body>
-        </Card>
-      </Col>
-    </Link>
+
+            {/* --- 💡 FIX 💡 --- */}
+            {/* Added conditional 'is-favorite' class */}
+            <Button
+              className={`p-0 fs-4 favorite-button btn-no-style ${isFav ? 'is-favorite' : ''}`}
+              onClick={handleFavoriteClick}
+              aria-label="Add to favorites"
+            >
+              {isFav ? <FaHeart /> : <FaRegHeart />}
+            </Button>
+            {/* --- END OF FIX --- */}
+          </div>
+        </Card.Body>
+      </Card>
+    </Col>
   );
 };
 
