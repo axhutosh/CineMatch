@@ -14,7 +14,7 @@ const Footer = () => {
         
         <div className="d-flex justify-content-center align-items-center mb-1">
           <div className="footer-name">
-            Your Name Here
+            Ashutosh
           </div>
           <span className="mx-3" style={{ fontSize: '1.2rem', color: '#aaa' }}>x</span>
           <img 
