@@ -1,0 +1,94 @@
+/* src/App.css */
+body {
+  margin: 0;
+  background-color: #f8f9fa;
+  color: #333;
+  
+  /* Apply the new fonts */
+  font-family: 'Lato', sans-serif;
+}
+
+/* Use Poppins for all headings */
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+}
+
+/* Override card title to use Poppins */
+.card-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+}
+/* src/App.css */
+
+/* --- Card Hover Animation --- */
+.card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: scale(1.03); /* Enlarge the card */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Add a more pronounced shadow */
+  z-index: 10;
+}
+/* src/App.css */
+
+/* --- Fade-in Animation --- */
+.container {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* src/App.css */
+
+/* --- Custom "No Image" Placeholder --- */
+.no-image-placeholder {
+  width: 100%;
+  /* This calculates the height to maintain a movie poster aspect ratio */
+  aspect-ratio: 2 / 3; 
+  background-color: #e9ecef;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #adb5bd;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 10px;
+}
+/* src/App.css */
+
+/* ... (your existing body, h1, etc. styles) ... */
+
+/* This makes our main .App container fill at least
+  the full height of the viewport.
+*/
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* This makes our main content (the <Routes>)
+  grow to fill any available space.
+*/
+.main-content {
+  flex-grow: 1;
+}
+
+/* This is for our new footer component.
+  mt-auto (margin-top: auto) is what pushes it
+  to the bottom of the .App container.
+*/
+.footer {
+  flex-shrink: 0; /* Prevents footer from shrinking */
+}
