@@ -1,75 +1,66 @@
 // src/App.jsx
-import React, { useState } from 'react';
+import React from 'react'; // Removed useState
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import AppNavbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
-import HomePage from './pages/HomePage';
+import HomePage from './pages/HomePage'; // This is our new Dashboard
 import MovieDetailsPage from './pages/MovieDetailsPage';
 import PersonDetailsPage from './pages/PersonDetailsPage';
 import FavoritesPage from './pages/FavoritesPage';
-import DiscoverPage from './pages/DiscoverPage'; // 1. Import DiscoverPage
+import DiscoverPage from './pages/DiscoverPage';
+import MoviesPage from './pages/MoviesPage'; // 1. Import new pages
+import TVShowsPage from './pages/TVShowsPage';
+import SearchPage from './pages/SearchPage';
+import AnimePage from './pages/AnimePage';
 import './App.css';
 
 function App() {
-  const [searchQuery, setSearchQuery] =useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1); 
+  // 2. All state (searchQuery, currentPage, etc.) is REMOVED.
+  // Pages now manage their own state.
   
   const navigate = useNavigate();
 
+  // 3. handleSearch is now much simpler.
+  // It just navigates to the SearchPage with a query parameter.
   const handleSearch = (query) => {
-    setSearchQuery(query);
-    setCurrentPage(1); 
-    setTotalPages(1); 
-    navigate('/'); 
+    if (query) {
+      navigate(`/search?q=${query}`);
+    }
   };
   
+  // 4. handleClearSearch now just navigates home.
   const handleClearSearch = () => {
-    setSearchQuery('');
-    setCurrentPage(1); 
-    setTotalPages(1); 
     navigate('/'); 
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
+  // 5. handlePageChange is REMOVED (no longer needed here).
 
   return (
     <div className="App" data-bs-theme="dark">
       <AppNavbar onSearch={handleSearch} onHomeClick={handleClearSearch} />
       
       <div className="main-content">
+        {/* 6. Routes are updated */}
         <Routes>
-          <Route 
-            path="/" 
-            element={
-              <HomePage 
-                searchQuery={searchQuery}
-                currentPage={currentPage}
-                onPageChange={handlePageChange}
-                totalPages={totalPages}
-                setTotalPages={setTotalPages}
-              />
-            } 
-          />
-          <Route 
-            path="/movie/:id" 
-            element={<MovieDetailsPage />} 
-          />
-          <Route 
-            path="/person/:id" 
-            element={<PersonDetailsPage />} 
-          />
-          <Route 
-            path="/favorites" 
-            element={<FavoritesPage />} 
-          />
-          {/* 2. ADD THE NEW ROUTE FOR DISCOVER */}
-          <Route 
-            path="/discover/genre/:genreId" 
-            element={<DiscoverPage />} 
-          />
+          {/* Main Dashboard */}
+          <Route path="/" element={<HomePage />} />
+          
+          {/* "See All" Pages */}
+          <Route path="/movies" element={<MoviesPage />} />
+          <Route path="/tv" element={<TVShowsPage />} />
+          <Route path="/anime" element={<AnimePage />} />
+          <Route path="/search" element={<SearchPage />} />
+
+          {/* Details Pages */}
+          <Route path="/movie/:id" element={<MovieDetailsPage />} />
+          <Route path="/tv/:id" element={<MovieDetailsPage />} /> {/* 7. Add route for TV details */}
+          <Route path="/person/:id" element={<PersonDetailsPage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/discover/genre/:genreId" element={<DiscoverPage />} />
+          
+          {/* We can add Top Rated / Upcoming routes later */}
+          {/* <Route path="/top-rated" element={<... />} /> */}
+          {/* <Route path="/upcoming" element={<... />} /> */}
         </Routes>
       </div>
       

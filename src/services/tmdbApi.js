@@ -1,28 +1,29 @@
 // src/services/tmdbApi.js
 import axios from 'axios';
 
-// The base URL is now our *own* serverless function
 const apiClient = axios.create({
   baseURL: '/.netlify/functions/tmdb',
 });
 
-// We now pass the TMDB path as a 'path' parameter
-export const getTrendingMovies = (page = 1) => {
+// --- Existing Functions ---
+export const getTrendingAll = (page = 1) => {
   return apiClient.get('', {
     params: {
-      path: '/trending/movie/week',
+      path: '/trending/all/week',
       page: page,
     },
   });
 };
 
+export const getTrendingMovies = (page = 1) => {
+  return apiClient.get('', {
+    params: { path: '/trending/movie/week', page: page },
+  });
+};
+
 export const searchMovies = (query, page = 1) => {
   return apiClient.get('', {
-    params: {
-      path: '/search/movie',
-      query: query,
-      page: page,
-    },
+    params: { path: '/search/movie', query: query, page: page },
   });
 };
 
@@ -37,42 +38,116 @@ export const getMovieDetails = (movieId) => {
 
 export const getRecommendedMovies = (movieId) => {
   return apiClient.get('', {
-    params: {
-      path: `/movie/${movieId}/recommendations`,
-    },
+    params: { path: `/movie/${movieId}/recommendations` },
   });
 };
 
 export const getMovieCredits = (movieId) => {
-  return apiClient.get('', {
-    params: {
-      path: `/movie/${movieId}/credits`,
-    },
-  });
+  return apiClient.get('', { params: { path: `/movie/${movieId}/credits` } });
 };
 
 export const getPersonDetails = (personId) => {
-  return apiClient.get('', {
-    params: {
-      path: `/person/${personId}`,
-    },
-  });
+  return apiClient.get('', { params: { path: `/person/${personId}` } });
 };
 
 export const getPersonMovieCredits = (personId) => {
   return apiClient.get('', {
-    params: {
-      path: `/person/${personId}/movie_credits`,
-    },
+    params: { path: `/person/${personId}/movie_credits` },
   });
 };
 
-// --- 👇 ADD THIS NEW FUNCTION ---
 export const getMoviesByGenre = (genreId, page = 1) => {
   return apiClient.get('', {
     params: {
       path: '/discover/movie',
       with_genres: genreId,
+      page: page,
+    },
+  });
+};
+
+export const getPopularTvShows = (page = 1) => {
+  return apiClient.get('', { params: { path: '/tv/popular', page: page } });
+};
+
+export const getTopRatedMovies = (page = 1) => {
+  return apiClient.get('', {
+    params: { path: '/movie/top_rated', page: page },
+  });
+};
+
+export const getUpcomingMovies = (page = 1) => {
+  return apiClient.get('', {
+    params: { path: '/movie/upcoming', page: page },
+  });
+};
+
+export const getAnime = (page = 1) => {
+  return apiClient.get('', {
+    params: {
+      path: '/discover/tv',
+      with_genres: 16,
+      page: page,
+    },
+  });
+};
+
+export const getTopRatedTvShows = (page = 1) => {
+  return apiClient.get('', {
+    params: { path: '/tv/top_rated', page: page },
+  });
+};
+
+export const getMoviesByGenreId = (genreId, page = 1) => {
+  return apiClient.get('', {
+    params: {
+      path: '/discover/movie',
+      with_genres: genreId,
+      page: page,
+    },
+  });
+};
+
+export const getTvShowsByGenreId = (genreId, page = 1) => {
+  return apiClient.get('', {
+    params: {
+      path: '/discover/tv',
+      with_genres: genreId,
+      page: page,
+    },
+  });
+};
+
+export const getMoviesByKeyword = (keywordId, page = 1) => {
+  return apiClient.get('', {
+    params: {
+      path: '/discover/movie',
+      with_keywords: keywordId,
+      page: page,
+    },
+  });
+};
+
+export const getRomComMovies = (page = 1) => {
+  return apiClient.get('', {
+    params: {
+      path: '/discover/movie',
+      with_genres: '10749,35', // Romance (10749) AND Comedy (35)
+      page: page,
+    },
+  });
+};
+
+// --- 👇 ADD THIS NEW FUNCTION ---
+
+/**
+ * Fetches Romantic Comedy TV Shows (Genre 10749 AND 35)
+ */
+export const getRomComTvShows = (page = 1) => {
+  return apiClient.get('', {
+    params: {
+      path: '/discover/tv',
+      with_genres: '10749,35', // Romance (10749) AND Comedy (35)
       page: page,
     },
   });

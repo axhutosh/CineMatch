@@ -1,68 +1,36 @@
 // src/components/layout/AppNavbar.jsx
-import React, { useState, useEffect } from 'react';
-import { Navbar, Container, Form, Button, FormControl, ListGroup, Nav } from 'react-bootstrap'; // 1. Import Nav
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Navbar, Container, Form, Button, FormControl, Nav } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom'; // 1. Import useNavigate
 import { FaSearch } from 'react-icons/fa';
 import { MdMovie } from 'react-icons/md';
-import useDebounce from '../../hooks/useDebounce';
-import { searchMovies } from '../../services/tmdbApi';
+// We no longer need useDebounce or searchMovies here, as search is on its own page
+// import useDebounce from '../../hooks/useDebounce';
+// import { searchMovies } from '../../services/tmdbApi';
 
 const AppNavbar = ({ onSearch, onHomeClick }) => {
   const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false); 
-  
-  const debouncedQuery = useDebounce(query, 300);
+  const navigate = useNavigate(); // 2. Get the navigate function
 
-  useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (debouncedQuery) {
-        try {
-          const response = await searchMovies(debouncedQuery, 1);
-          const data = response.data.body ? JSON.parse(response.data.body) : response.data;
-          setSuggestions(data.results || []);
-          setShowSuggestions(true);
-        } catch (err) {
-          console.error("Failed to fetch suggestions", err);
-          setSuggestions([]);
-        }
-      } else {
-        setSuggestions([]);
-        setShowSuggestions(false);
-      }
-    };
-
-    fetchSuggestions();
-  }, [debouncedQuery]);
-
+  // Handler for form submit (Enter or button click)
   const handleSearch = (e) => {
     e.preventDefault();
     if (query) {
-      onSearch(query);
-      setSuggestions([]);
-      setShowSuggestions(false);
+      onSearch(query); // Call the onSearch prop from App.jsx
+      setQuery('');    // Clear the input
     }
   };
 
-  const handleSuggestionClick = (movieTitle) => {
-    setQuery(movieTitle);
-    onSearch(movieTitle);
-    setSuggestions([]);
-    setShowSuggestions(false);
-  };
-
+  // Handler for the brand click
   const handleBrandClick = (e) => {
     e.preventDefault();
     setQuery('');
-    setSuggestions([]);
-    setShowSuggestions(false);
-    onHomeClick();
+    onHomeClick(); // Call the onHomeClick prop from App.jsx
   };
-  
-  // 2. Helper to clear suggestions when navigating
-  const handleNavClick = () => {
-    setSuggestions([]);
-    setShowSuggestions(false);
+
+  // 3. Simple handler for nav links
+  const handleNavClick = (path) => {
+    navigate(path);
   };
 
   return (
@@ -75,43 +43,31 @@ const AppNavbar = ({ onSearch, onHomeClick }) => {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           
-          {/* 3. ADD NAVBAR LINKS */}
-          <Nav className="me-auto" onSelect={handleNavClick}>
+          {/* 4. UPDATED NAVBAR LINKS */}
+          <Nav className="me-auto">
             <Nav.Link as={Link} to="/" onClick={handleBrandClick}>Home</Nav.Link>
-            <Nav.Link as={Link} to="/favorites">My List</Nav.Link>
-            {/* We can add "TV Shows" and "Anime" here later */}
+            <Nav.Link as={Link} to="/tv" onClick={() => handleNavClick('/tv')}>TV Shows</Nav.Link>
+            <Nav.Link as={Link} to="/movies" onClick={() => handleNavClick('/movies')}>Movies</Nav.Link>
+            <Nav.Link as={Link} to="/favorites" onClick={() => handleNavClick('/favorites')}>My List</Nav.Link>
+            <Nav.Link as={Link} to="/anime" onClick={() => handleNavClick('/anime')}>Anime</Nav.Link>
           </Nav>
+          
+          {/* 5. Search form is now simpler */}
+          {/* It no longer needs suggestions or positioning wrappers */}
+          <Form className="d-flex" onSubmit={handleSearch}>
+            <FormControl
+              type="search"
+              placeholder="Search..."
+              className="me-2"
+              aria-label="Search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <Button variant="outline-success" type="submit">
+              <FaSearch />
+            </Button>
+          </Form>
 
-          <div className="position-relative">
-            <Form className="d-flex" onSubmit={handleSearch}>
-              <FormControl
-                type="search"
-                placeholder="Search for a movie..."
-                className="me-2"
-                aria-label="Search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onFocus={() => query && setShowSuggestions(true)}
-              />
-              <Button variant="outline-success" type="submit">
-                <FaSearch />
-              </Button>
-            </Form>
-
-            {showSuggestions && suggestions.length > 0 && (
-              <ListGroup className="search-suggestions">
-                {suggestions.slice(0, 5).map((movie) => (
-                  <ListGroup.Item 
-                    key={movie.id} 
-                    action
-                    onClick={() => handleSuggestionClick(movie.title)}
-                  >
-                    {movie.title}
-                  </ListGroup.Item>
-                ))}
-              </ListGroup>
-            )}
-          </div>
         </Navbar.Collapse>
       </Container>
     </Navbar>

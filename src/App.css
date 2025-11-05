@@ -5,14 +5,10 @@ body {
   margin: 0;
   font-family: 'Lato', sans-serif;
 }
-
-/* Use Poppins for all headings */
 h1, h2, h3, h4, h5, h6, .navbar-brand {
   font-family: 'Poppins', sans-serif;
   font-weight: 700;
 }
-
-/* Override card title to use Poppins */
 .card-title {
   font-family: 'Poppins', sans-serif;
   font-weight: 600;
@@ -24,7 +20,6 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   flex-direction: column;
   min-height: 100vh;
 }
-
 .main-content {
   flex-grow: 1;
 }
@@ -33,26 +28,15 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
 .container {
   animation: fadeIn 0.5s ease-in-out;
 }
-
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* --- COMPONENT STYLES --- */
-
-/* --- Card --- */
 .card {
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
-
-/* --- Custom "No Image" Placeholder --- */
 .no-image-placeholder {
   width: 100%;
   aspect-ratio: 2 / 3; 
@@ -64,8 +48,6 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   font-weight: 600;
   padding: 10px;
 }
-
-/* --- Cast Scroller Styles --- */
 .cast-scroller {
   overflow-x: auto;
   padding-bottom: 15px;
@@ -73,11 +55,9 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
 .cast-scroller::-webkit-scrollbar {
   display: none;
 }
-
 .cast-card {
   text-align: center;
   font-size: 0.85rem;
@@ -85,7 +65,6 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   flex-shrink: 0;
   width: 150px;
 }
-
 .cast-img {
   width: 130px;
   height: 130px;
@@ -94,34 +73,22 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   cursor: pointer;
 }
-
 .cast-img:hover {
   transform: scale(1.08);
 }
-
 @media (max-width: 576px) {
-  .cast-card {
-    width: 120px;
-  }
-  .cast-img {
-    width: 100px;
-    height: 100px;
-  }
+  .cast-card { width: 120px; }
+  .cast-img { width: 100px; height: 100px; }
 }
-
-/* --- Footer --- */
 .footer {
   flex-shrink: 0;
 }
-
 .footer-name {
   font-family: 'Great Vibes', cursive;
   font-size: 1.25rem;
   color: #1abc9c;
   margin: 0; 
 }
-
-/* --- Search Suggestions --- */
 .search-suggestions {
   position: absolute;
   top: 100%;
@@ -131,9 +98,6 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   max-height: 300px;
   overflow-y: auto;
 }
-
-/* --- Utility Button Style --- */
-/* This removes all default styling from a react-bootstrap Button */
 .btn-no-style {
   background-color: transparent !important;
   border: none !important;
@@ -150,65 +114,153 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   text-decoration: none !important;
 }
 
+/* --- 💡 HORIZONTAL SCROLL STYLES FIX 💡 --- */
+.horizontal-scroll-wrapper {
+  overflow-x: auto; /* 1. FIX: Changed from 'hidden' to 'auto' to allow scrolling */
+  /* overflow-y: hidden; <-- 2. FIX: REMOVED this line to prevent hover clipping */
+  padding-top: 10px; /* 3. ADDED: Gives room for card to scale up on hover */
+  padding-bottom: 15px;
+  -ms-overflow-style: none;  /* Hides scrollbar in IE/Edge */
+  scrollbar-width: none;     /* Hides scrollbar in Firefox */
+  scroll-behavior: smooth; /* Smooth scrolling for buttons */
+}
+/* Hides scrollbar in Chrome/Safari */
+.horizontal-scroll-wrapper::-webkit-scrollbar {
+  display: none;
+}
+/* --- END OF FIX --- */
 
-/* --- 💡 DARK THEME STYLES 💡 --- */
 
-/* 1. Sets the default body background */
-body[data-bs-theme="dark"] {
-  background-color: #212529; /* Bootstrap's dark color */
-  color: #dee2e6; /* A light gray for text */
+/* --- CARD SIZING FOR ROWS --- */
+.category-col {
+  width: 200px; 
+  flex-shrink: 0;
+}
+@media (max-width: 1200px) {
+  .category-col {
+    width: 180px; 
+  }
+}
+@media (max-width: 768px) {
+  .category-col {
+    width: 160px; 
+  }
+}
+@media (max-width: 576px) {
+  .category-col {
+    width: 140px; 
+  }
 }
 
-/* 2. Adds subtle borders to "merge" Navbar and Footer */
+/* --- SCROLL ARROW STYLES --- */
+.scroll-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  color: white;
+  font-size: 4rem;
+  height: 100%;
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  border: none;
+  background-color: transparent;
+}
+.category-row-container:hover .scroll-arrow {
+  opacity: 1;
+}
+.scroll-arrow.left {
+  left: 0;
+  background: linear-gradient(to right, rgba(33, 37, 41, 0.9) 0%, rgba(33, 37, 41, 0) 100%);
+}
+.scroll-arrow.right {
+  right: 0;
+  background: linear-gradient(to left, rgba(33, 37, 41, 0.9) 0%, rgba(33, 37, 41, 0) 100%);
+}
+.scroll-arrow.hidden {
+  opacity: 0;
+  cursor: default;
+  pointer-events: none;
+}
+.scroll-arrow:focus, .scroll-arrow:active {
+  box-shadow: none !important;
+  color: white !important;
+  outline: none !important;
+}
+.scroll-arrow:hover {
+  color: #1abc9c; /* Teal hover color */
+}
+
+/* --- NAVIGATION DOTS STYLES --- */
+.pagination-dots {
+  display: flex;
+  align-items: center;
+}
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  margin: 0 3px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+.dot:hover {
+  background-color: rgba(255, 255, 255, 0.7);
+  transform: scale(1.1);
+}
+.dot.active {
+  background-color: white;
+  transform: scale(1.2);
+}
+
+
+/* --- DARK THEME STYLES --- */
+body[data-bs-theme="dark"] {
+  background-color: #212529;
+  color: #dee2e6;
+}
 .navbar {
   background-color: #212529;
 }
-
 .footer {
-  border-top: 1px solid #343a40; /* A faint dark line */
+  border-top: 1px solid #343a40;
   background-color: #212529 !important; 
 }
-
-/* 3. Updates Card shadows for dark mode */
 .card {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); 
 }
-
 .card:hover {
   transform: scale(1.03);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
   z-index: 10;
 }
-
-/* 4. Updates Cast Image for dark mode */
 .cast-img {
-  background-color: #343a40; /* Darker placeholder bg */
+  background-color: #343a40;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
 }
-
 .cast-img:hover {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
-
-/* 5. Updates "No Image" placeholder for dark mode */
 .no-image-placeholder {
-  background-color: #343a40; /* Darker bg */
-  color: #6c757d; /* Muted text */
+  background-color: #343a40;
+  color: #6c757d;
 }
-/* --- 💡 UPDATED HEART ICON STYLES 💡 --- */
-
-/* 6. Default state for icons */
 .favorite-button svg {
-  color: #dee2e6; /* Default: empty heart is light gray/white */
+  color: #dee2e6;
   transition: all 0.2s ease-in-out;
 }
 .favorite-button.is-favorite svg {
-  color: #dc3545; /* Default: *filled* heart is red */
+  color: #dc3545;
 }
-
-/* 7. Hover state for icons */
 .favorite-button:hover svg {
-  color: #dc3545 !important; /* On hover, *any* heart turns RED */
-  filter: drop-shadow(0 0 5px rgba(220, 53, 69, 0.5)); /* Red glow */
+  color: #dc3545 !important;
+  filter: drop-shadow(0 0 5px rgba(220, 53, 69, 0.5));
   transform: scale(1.1);
 }
