@@ -152,3 +152,35 @@ export const getRomComTvShows = (page = 1) => {
     },
   });
 };
+// src/services/tmdbApi.js
+
+// ... (keep all your existing code) ...
+
+/**
+ * Fetches massive data for the spatial wall.
+ */
+export const getMassiveWallData = async () => {
+  // Fetch pages 1 to 15 (300 items) to fill the wall
+  // We use a loop to generate the page numbers
+  const pagesToFetch = Array.from({ length: 50 }, (_, i) => i + 1);
+  
+  // WARNING: This fires 15 requests at once. 
+  // If you see "Failed to load", the API limit might be hit.
+  // We can batch them if needed, but let's try parallel first for speed.
+  const requests = pagesToFetch.map(page => 
+    apiClient.get('', { params: { path: '/trending/all/week', page: page } })
+  );
+
+  const responses = await Promise.all(requests);
+
+  let allMovies = [];
+  responses.forEach(response => {
+    let data = response.data.body ? JSON.parse(response.data.body) : response.data;
+    if (data.results) {
+      allMovies = [...allMovies, ...data.results];
+    }
+  });
+
+  // Shuffle nicely
+  return allMovies.sort(() => Math.random() - 0.5);
+};

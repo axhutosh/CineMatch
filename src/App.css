@@ -1,6 +1,21 @@
 /* src/App.css */
 
 /* --- GLOBAL STYLES --- */
+/* --- 🚫 HIDE SCROLLBARS GLOBALLY 🚫 --- */
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+html::-webkit-scrollbar, 
+body::-webkit-scrollbar, 
+#root::-webkit-scrollbar,
+.spatial-grid::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+html, body, #root, .spatial-grid {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
 body {
   margin: 0;
   font-family: 'Lato', sans-serif;
@@ -226,13 +241,54 @@ body[data-bs-theme="dark"] {
   background-color: #212529;
   color: #dee2e6;
 }
+/* 1. NAVBAR: Floating Gradient from Top */
 .navbar {
-  background-color: #212529;
+  position: fixed !important; /* Float over the content */
+  top: 0;
+  width: 100%;
+  z-index: 5000; /* Stay on top of everything */
+  
+  /* The Gradient: Solid black at top, fading to transparent */
+  background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%) !important;
+  
+  border: none !important; /* Remove border */
+  backdrop-filter: blur(2px); /* Optional: Subtle blur for readability */
+  padding-top: 15px;
+  padding-bottom: 30px; /* Extra padding for the gradient to fade out nicely */
 }
+
+/* 2. FOOTER: Floating Gradient at Bottom */
 .footer {
-  border-top: 1px solid #343a40;
-  background-color: #212529 !important; 
+  position: fixed !important; /* Float at the bottom of the screen */
+  bottom: 0;
+  width: 100%;
+  z-index: 5000;
+  
+  /* The Gradient: Transparent at top, fading to solid black at bottom */
+  background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%) !important;
+  
+  border: none !important;
+  padding-top: 40px; /* Space for gradient */
+  padding-bottom: 10px;
+  pointer-events: none; /* Lets you click movies *under* the transparent part of footer */
 }
+/* Enable clicking on links inside the footer (Name, Copyright) */
+.footer .container {
+  pointer-events: auto; 
+}
+
+/* 3. BODY ADJUSTMENT */
+/* Ensure the grid goes all the way to the edges behind the nav/footer */
+.spatial-grid {
+  padding-top: 80px; /* Push content down slightly so first row isn't hidden */
+  padding-bottom: 100px; /* Push content up so last row isn't hidden */
+}
+
+/* 4. TEXT SHADOWS */
+/* Make text readable against posters */
+.navbar-brand, .nav-link, .footer-name, .footer div {
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+} 
 .card {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); 
 }
@@ -263,4 +319,84 @@ body[data-bs-theme="dark"] {
   color: #dc3545 !important;
   filter: drop-shadow(0 0 5px rgba(220, 53, 69, 0.5));
   transform: scale(1.1);
+}
+/* src/App.css */
+
+/* ... keep your existing styles ... */
+/* --- 🌌 SPATIAL UI STYLES (EDGE-TO-EDGE FINAL) 🌌 --- */
+
+/* The Viewport (Window) */
+.spatial-container {
+  background-color: #000;
+  height: 100vh; /* Full screen fixed height */
+  width: 100%;
+  overflow: hidden; /* Hide native scrollbars completely */
+  position: relative;
+  touch-action: none; /* Stop browser gestures */
+}
+
+/* The Moving Wall */
+.spatial-grid {
+  display: grid;
+  /* 45px texture size */
+  grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); 
+  gap: 1px;
+  width: 100%;
+  background-color: #000;
+  
+  /* 💡 FINAL FIX: Remove all padding for edge-to-edge look */
+  padding: 0;
+  
+  min-height: 100vh; /* Ensure it fills screen */
+}
+
+.micro-card {
+  position: relative;
+  aspect-ratio: 2/3;
+  overflow: visible;
+  /* Important: pass events through to the draggable parent */
+  pointer-events: auto; 
+}
+
+.micro-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+
+  /* Base State */
+  filter: brightness(0.6) grayscale(0.5) contrast(0.9);
+  border-radius: 1px;
+  
+  /* Physics */
+  transition: 
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    filter 0.2s ease-out,
+    box-shadow 0.2s ease-out,
+    border-radius 0.2s ease-out;
+}
+
+/* --- HOVER POP-OUT --- */
+.micro-card:hover {
+  z-index: 2000;
+}
+
+.micro-card:hover img {
+  transform: scale(5);
+  filter: brightness(1.1) grayscale(0) contrast(1.05);
+  border-radius: 4px;
+  box-shadow: 
+    0 30px 60px rgba(0,0,0,0.9),
+    0 0 20px rgba(80, 120, 255, 0.2),
+    0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .spatial-grid {
+    grid-template-columns: repeat(auto-fill, minmax(35px, 1fr));
+  }
+  .micro-card:hover img {
+    transform: scale(4);
+  }
 }
