@@ -1,68 +1,53 @@
 // src/App.jsx
-import React from 'react'; // Removed useState
-import { Routes, Route, useNavigate } from 'react-router-dom';
-import AppNavbar from './components/layout/Navbar';
+import React, { useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import AppNavbar from './components/layout/Navbar'; // Ensure this path matches your folder
 import Footer from './components/layout/Footer';
-import HomePage from './pages/HomePage'; // This is our new Dashboard
+
+// 1. IMPORT YOUR PAGES
+import HomePage from './pages/HomePage';
 import MovieDetailsPage from './pages/MovieDetailsPage';
-import PersonDetailsPage from './pages/PersonDetailsPage';
-import FavoritesPage from './pages/FavoritesPage';
-import DiscoverPage from './pages/DiscoverPage';
-import MoviesPage from './pages/MoviesPage'; // 1. Import new pages
-import TVShowsPage from './pages/TVShowsPage';
-import SearchPage from './pages/SearchPage';
-import AnimePage from './pages/AnimePage';
-import './App.css';
+import SearchResultsPage from './pages/SearchPage'; // 👈 We will create this in Step 2
+
+// If you have these pages, uncomment them:
+// import MoviesPage from './pages/MoviesPage';
+// import TVShowsPage from './pages/TVShowsPage';
 
 function App() {
-  // 2. All state (searchQuery, currentPage, etc.) is REMOVED.
-  // Pages now manage their own state.
-  
-  const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem('homeViewMode') || 'infinite';
+  });
 
-  // 3. handleSearch is now much simpler.
-  // It just navigates to the SearchPage with a query parameter.
-  const handleSearch = (query) => {
-    if (query) {
-      navigate(`/search?q=${query}`);
-    }
+  const handleViewSwitch = (mode) => {
+    setViewMode(mode);
+    localStorage.setItem('homeViewMode', mode);
+    window.scrollTo(0, 0);
   };
-  
-  // 4. handleClearSearch now just navigates home.
-  const handleClearSearch = () => {
-    navigate('/'); 
-  };
-
-  // 5. handlePageChange is REMOVED (no longer needed here).
 
   return (
-    <div className="App" data-bs-theme="dark">
-      <AppNavbar onSearch={handleSearch} onHomeClick={handleClearSearch} />
+    <div className="app-container bg-black min-vh-100 text-white">
+      {/* Navbar controls the View Mode */}
+      <AppNavbar 
+         viewMode={viewMode} 
+         onViewSwitch={handleViewSwitch} 
+      />
       
-      <div className="main-content">
-        {/* 6. Routes are updated */}
-        <Routes>
-          {/* Main Dashboard */}
-          <Route path="/" element={<HomePage />} />
-          
-          {/* "See All" Pages */}
-          <Route path="/movies" element={<MoviesPage />} />
-          <Route path="/tv" element={<TVShowsPage />} />
-          <Route path="/anime" element={<AnimePage />} />
-          <Route path="/search" element={<SearchPage />} />
+      <Routes>
+        {/* Home Page */}
+        <Route path="/" element={<HomePage viewMode={viewMode} />} />
+        
+        {/* Movie Details */}
+        <Route path="/movie/:id" element={<MovieDetailsPage />} />
 
-          {/* Details Pages */}
-          <Route path="/movie/:id" element={<MovieDetailsPage />} />
-          <Route path="/tv/:id" element={<MovieDetailsPage />} /> {/* 7. Add route for TV details */}
-          <Route path="/person/:id" element={<PersonDetailsPage />} />
-          <Route path="/favorites" element={<FavoritesPage />} />
-          <Route path="/discover/genre/:genreId" element={<DiscoverPage />} />
-          
-          {/* We can add Top Rated / Upcoming routes later */}
-          {/* <Route path="/top-rated" element={<... />} /> */}
-          {/* <Route path="/upcoming" element={<... />} /> */}
-        </Routes>
-      </div>
+        {/* 🔍 SEARCH ROUTE (This fixes the blank search page) */}
+        <Route path="/search" element={<SearchResultsPage />} />
+
+        {/* Placeholders for other links - prevents crashing if files don't exist */}
+        <Route path="/movies" element={<h1 className="pt-5 mt-5 text-center">Movies Page Coming Soon</h1>} />
+        <Route path="/tv" element={<h1 className="pt-5 mt-5 text-center">TV Shows Page Coming Soon</h1>} />
+        <Route path="/anime" element={<h1 className="pt-5 mt-5 text-center">Anime Page Coming Soon</h1>} />
+        <Route path="/favorites" element={<h1 className="pt-5 mt-5 text-center">My List Coming Soon</h1>} />
+      </Routes>
       
       <Footer />
     </div>

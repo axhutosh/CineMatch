@@ -1,72 +1,119 @@
 // src/components/layout/AppNavbar.jsx
 import React, { useState } from 'react';
 import { Navbar, Container, Form, Button, FormControl, Nav } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom'; // 1. Import useNavigate
-import { FaSearch } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { FaSearch, FaTh, FaStream } from 'react-icons/fa';
 import { MdMovie } from 'react-icons/md';
-// We no longer need useDebounce or searchMovies here, as search is on its own page
-// import useDebounce from '../../hooks/useDebounce';
-// import { searchMovies } from '../../services/tmdbApi';
 
-const AppNavbar = ({ onSearch, onHomeClick }) => {
+const AppNavbar = ({ viewMode, onViewSwitch }) => {
   const [query, setQuery] = useState('');
-  const navigate = useNavigate(); // 2. Get the navigate function
+  const navigate = useNavigate();
 
-  // Handler for form submit (Enter or button click)
+  // ⚡️ FIX 1: Search now navigates DIRECTLY. No waiting for parent props.
   const handleSearch = (e) => {
     e.preventDefault();
-    if (query) {
-      onSearch(query); // Call the onSearch prop from App.jsx
-      setQuery('');    // Clear the input
+    if (query.trim()) {
+      navigate(`/search?q=${query}`); // Forces url change to search results
+      setQuery('');
     }
   };
 
-  // Handler for the brand click
-  const handleBrandClick = (e) => {
-    e.preventDefault();
-    setQuery('');
-    onHomeClick(); // Call the onHomeClick prop from App.jsx
-  };
-
-  // 3. Simple handler for nav links
-  const handleNavClick = (path) => {
-    navigate(path);
-  };
-
   return (
-    <Navbar expand="lg" className="mb-4" sticky="top">
+    <Navbar 
+      expand="lg" 
+      className="mb-4" 
+      sticky="top"
+      variant="dark"
+      style={{
+        backgroundColor: 'rgba(0, 0, 0, 0.75)', 
+        backdropFilter: 'blur(12px)',           
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        transition: 'background 0.3s ease'
+      }}
+    >
       <Container>
-        <Navbar.Brand as={Link} to="/" onClick={handleBrandClick}>
+        {/* ⚡️ FIX 2: Removed 'preventDefault'. Now clicking this actually goes Home. */}
+        <Navbar.Brand as={Link} to="/" className="fw-bold fs-4 text-danger">
           <MdMovie style={{ marginBottom: '4px' }} />
           {' '}CineMatch
         </Navbar.Brand>
+        
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        
         <Navbar.Collapse id="basic-navbar-nav">
           
-          {/* 4. UPDATED NAVBAR LINKS */}
+          {/* ⚡️ FIX 3: Simplified Links. Removed complex click handlers. */}
           <Nav className="me-auto">
-            <Nav.Link as={Link} to="/" onClick={handleBrandClick}>Home</Nav.Link>
-            <Nav.Link as={Link} to="/tv" onClick={() => handleNavClick('/tv')}>TV Shows</Nav.Link>
-            <Nav.Link as={Link} to="/movies" onClick={() => handleNavClick('/movies')}>Movies</Nav.Link>
-            <Nav.Link as={Link} to="/favorites" onClick={() => handleNavClick('/favorites')}>My List</Nav.Link>
-            <Nav.Link as={Link} to="/anime" onClick={() => handleNavClick('/anime')}>Anime</Nav.Link>
+            <Nav.Link as={Link} to="/">Home</Nav.Link>
+            <Nav.Link as={Link} to="/tv">TV Shows</Nav.Link>
+            <Nav.Link as={Link} to="/movies">Movies</Nav.Link>
+            <Nav.Link as={Link} to="/favorites">My List</Nav.Link>
+            <Nav.Link as={Link} to="/anime">Anime</Nav.Link>
           </Nav>
           
-          {/* 5. Search form is now simpler */}
-          {/* It no longer needs suggestions or positioning wrappers */}
-          <Form className="d-flex" onSubmit={handleSearch}>
-            <FormControl
-              type="search"
-              placeholder="Search..."
-              className="me-2"
-              aria-label="Search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <Button variant="outline-success" type="submit">
-              <FaSearch />
-            </Button>
-          </Form>
+          <div className="d-flex align-items-center gap-3">
+            
+            {/* Search Form */}
+            <Form className="d-flex" onSubmit={handleSearch}>
+              <FormControl
+                type="search"
+                placeholder="Search..."
+                className="me-2"
+                aria-label="Search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: '#fff'
+                }}
+              />
+              <Button variant="outline-danger" type="submit">
+                <FaSearch />
+              </Button>
+            </Form>
+
+            {/* Toggle Button */}
+            <div 
+              className="d-flex align-items-center p-1"
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                borderRadius: '20px',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}
+            >
+              <button
+                onClick={() => onViewSwitch('infinite')}
+                style={{
+                  background: viewMode === 'infinite' ? 'rgba(255,255,255,0.2)' : 'transparent',
+                  color: viewMode === 'infinite' ? '#fff' : '#aaa',
+                  border: 'none', borderRadius: '50%',
+                  width: '32px', height: '32px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', transition: 'all 0.2s'
+                }}
+                title="Infinite Wall"
+              >
+                <FaTh size={14} />
+              </button>
+
+              <button
+                onClick={() => onViewSwitch('classic')}
+                style={{
+                  background: viewMode === 'classic' ? 'rgba(255,255,255,0.2)' : 'transparent',
+                  color: viewMode === 'classic' ? '#fff' : '#aaa',
+                  border: 'none', borderRadius: '50%',
+                  width: '32px', height: '32px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', transition: 'all 0.2s'
+                }}
+                title="Classic View"
+              >
+                <FaStream size={14} />
+              </button>
+            </div>
+
+          </div>
 
         </Navbar.Collapse>
       </Container>

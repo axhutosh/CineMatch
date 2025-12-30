@@ -99,6 +99,15 @@ const MovieDetailsPage = () => {
     }
   };
 
+  // --- 💡 NEW WATCH HANDLER 💡 ---
+  const handleWatchNow = () => {
+    if (!movie) return;
+    // Logic: "Movie Title" + "full movie"
+    const query = `${movie.title} full movie`;
+    const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+    window.open(youtubeUrl, '_blank');
+  };
+
   if (loading) {
     return (
       <Container className="text-center mt-5">
@@ -158,29 +167,26 @@ const MovieDetailsPage = () => {
             <FaClock className="me-1" /> {movie.runtime} minutes
           </div>
 
-          {/* --- 💡 UPDATED GENRES SECTION 💡 --- */}
           <div className="mb-3">
             <strong>Genres: </strong>
             {movie.genres.map(genre => (
-              // Wrap the Badge in a Link
               <Link 
                 to={`/discover/genre/${genre.id}`}
                 key={genre.id}
-                state={{ genreName: genre.name }} // Pass the genre name to the new page
+                state={{ genreName: genre.name }}
                 className="text-decoration-none"
               >
                 <Badge 
                   pill 
                   bg="info" 
                   className="me-2" 
-                  style={{cursor: 'pointer'}} // Add pointer cursor
+                  style={{cursor: 'pointer'}}
                 >
                   {genre.name}
                 </Badge>
               </Link>
             ))}
           </div>
-          {/* --- END OF UPDATE --- */}
 
           {rating && (
             <div className="mb-3">
@@ -191,9 +197,35 @@ const MovieDetailsPage = () => {
             </div>
           )}
 
-          <a href={movie.homepage} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
-            Visit Website
-          </a>
+          {/* --- 💡 REPLACED "VISIT WEBSITE" WITH "WATCH NOW" 💡 --- */}
+          <button 
+            className="btn btn-danger" 
+            onClick={handleWatchNow}
+            style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              borderRadius: '20px', 
+              padding: '8px 24px',
+              fontWeight: 'bold',
+              border: 'none',
+              transition: 'transform 0.2s',
+              marginRight: '10px'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="20" 
+              height="20" 
+              fill="currentColor" 
+              viewBox="0 0 16 16"
+            >
+              <path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+            </svg>
+            Watch Now
+          </button>
 
           {trailerKey && (
             <Button 
@@ -242,8 +274,6 @@ const MovieDetailsPage = () => {
           ))}
         </Row>
       </div>
-      {/* --- END OF CAST SECTION --- */}
-
 
       {/* --- Recommendations Section --- */}
       <hr className="my-5" />
