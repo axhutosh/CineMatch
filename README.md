@@ -5,26 +5,23 @@ CineMatch is a modern, responsive movie discovery application built with React a
 ## 🚀 Live Demo
 
 You can view the live project deployed on Netlify:
+**[https://cineematch.netlify.app/](https://cineematch.netlify.app/)**
 
-https://cineematch.netlify.app/
+## ✨ Features (What's New in Revamped Version)
 
----
+This project has been fully revamped to include advanced interactive features and a premium UI overhaul:
 
-## ✨ Features (What's New in Phase 3)
-
-This project has been built in phases, with the latest update completing a full suite of interactive features:
-
-* **Secure Serverless API:** All requests to the TMDB API are proxied through **Netlify Functions**. This keeps the private API key 100% secure and off the client-side.
-* **"My List" (Favorites):** Users can add or remove movies to a personal "My List," which is saved in the browser's `localStorage`.
-* **Clickable Cast Pages:** The "Top Cast" section on any movie is now interactive. Clicking an actor opens a dedicated `PersonDetailsPage` showing their biography and "Known For" movies.
-* **Genre Discovery:** All genre badges (e.g., "Action", "Comedy") are clickable and link to a new `DiscoverPage` that shows a paginated grid of all movies for that genre.
-* **Parental Ratings:** The app fetches and displays US parental ratings (e.g., "PG-13", "R") for movies.
-* **Embedded Trailers:** Integrated `react-youtube` to show movie trailers directly on the details page.
-* **Full Dark Theme:** The entire app uses a cohesive dark theme, applied using `react-bootstrap`'s `data-bs-theme` attribute.
-* **Pagination:** Users can browse through multiple pages of "Trending" or "Search" results.
-* **Responsive Design:** The app is fully responsive and looks great on desktop, tablets, and mobile devices.
-
----
+* **Custom Brand Identity:** Features a unique "Bow Tie" concave logo design and a dynamic navbar with gradient transparency and interactive red hover effects.
+* **Dual View Modes:** Users can switch between an "Infinite Wall" grid for rapid discovery and a "Classic" horizontal carousel view.
+* **Smart Watch Integration:** A "Watch Now" button that intelligently redirects users to streaming sources using slug-based search queries.
+* **Telegram Download Bridge:** A custom download workflow that automatically copies the movie title to the clipboard and opens the **@Rexie_Robot** Telegram bot for instant file access.
+* **Secure Serverless API:** All requests to the TMDB API are proxied through Netlify Functions, keeping the private API key 100% secure.
+* **"My List" (Favorites):** Client-side persistence allows users to add or remove movies to a personal list saved in `localStorage`.
+* **Deep Discovery:**
+    * **Clickable Cast:** Clicking an actor opens a dedicated profile showing their biography and filmography.
+    * **Genre Portals:** Clicking genre badges links to a filtered discovery wall for that category.
+* **Embedded Trailers:** Integrated `react-youtube` to play trailers directly on the details page and in the hero background.
+* **Responsive Dark Theme:** A cohesive dark UI built with React-Bootstrap, optimized for mobile, tablet, and desktop.
 
 ## 🛠️ Tech Stack & Versions
 
@@ -35,9 +32,9 @@ This project was built using the latest versions of modern frontend technologies
 * **Styling:** React-Bootstrap (v2.x) & Bootstrap (v5.x)
 * **Icons:** React Icons
 * **Video:** React-YouTube
-* **API Client:** Axios (for client-to-function communication)
-* **Backend:** Netlify Functions (Node.js)
-* **Deployment:** Netlify---
+* **API Client:** Axios (proxied via Netlify Functions)
+* **Backend:** Netlify Functions (Node.js) for security
+* **Deployment:** Netlify
 
 ## 📊 Data & Attribution
 
