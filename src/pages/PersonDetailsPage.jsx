@@ -1,107 +1,109 @@
 // src/pages/PersonDetailsPage.jsx
-
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { Container, Row, Col, Spinner } from 'react-bootstrap';
 import { getPersonDetails, getPersonMovieCredits } from '../services/tmdbApi';
-// 1. Import Container
-import { Container, Row, Col, Image, Spinner, Alert } from 'react-bootstrap';
-import MovieCard from '../components/MovieCard'; // Re-use our MovieCard!
+import MovieCard from '../components/MovieCard';
 
 const PersonDetailsPage = () => {
   const { id } = useParams();
   const [person, setPerson] = useState(null);
-  const [movies, setMovies] = useState([]);
+  const [credits, setCredits] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-
-    const fetchPersonData = async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-
-        const [personResponse, creditsResponse] = await Promise.all([
+        // Fetch Person Info & Their Movies in parallel
+        const [detailsRes, creditsRes] = await Promise.all([
           getPersonDetails(id),
-          getPersonMovieCredits(id),
+          getPersonMovieCredits(id)
         ]);
 
-        // Helper to parse responses (handles 'body' in dev)
-        const parseData = (res) => (res.data.body ? JSON.parse(res.data.body) : res.data);
+        // Handle body parsing if needed (Netlify function wrapper)
+        const details = detailsRes.data.body ? JSON.parse(detailsRes.data.body) : detailsRes.data;
+        const creditsData = creditsRes.data.body ? JSON.parse(creditsRes.data.body) : creditsRes.data;
 
-        const personData = parseData(personResponse);
-        const creditsData = parseData(creditsResponse);
-
-        setPerson(personData);
-
-        // Sort movies by popularity and get the top 10
-        const sortedMovies = (creditsData.cast || [])
-          .sort((a, b) => b.popularity - a.popularity)
-          .slice(0, 10);
-        setMovies(sortedMovies);
+        setPerson(details);
         
-        setError(null);
-      } catch (err) {
-        setError('Failed to fetch actor details.');
-        console.error(err);
+        // Sort movies by popularity so the best ones show first
+        const sortedCast = (creditsData.cast || []).sort((a, b) => b.popularity - a.popularity);
+        
+        // Remove duplicates and items without posters to keep it clean
+        const uniqueCast = sortedCast.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i && v.poster_path);
+        
+        setCredits(uniqueCast);
+      } catch (error) {
+        console.error("Error fetching person:", error);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchPersonData();
+    fetchData();
   }, [id]);
 
-  if (loading) {
-    return (
-      <Container className="text-center mt-5">
-        <Spinner animation="border" variant="primary" />
-      </Container>
-    );
-  }
+  if (loading) return (
+    <div className="d-flex justify-content-center align-items-center vh-100 bg-black text-white">
+      <Spinner animation="border" variant="light" />
+    </div>
+  );
 
-  if (error) {
-    return (
-      <Container className="mt-5">
-        <Alert variant="danger">{error}</Alert>
-      </Container>
-    );
-  }
-
-  if (!person) return null;
-
-  const getImageUrl = (path, size = "w500") => `https://image.tmdb.org/t/p/${size}${path}`;
+  if (!person) return <div className="text-center text-white mt-5">Person not found</div>;
 
   return (
-    // 2. Wrap everything in a <Container> and add padding-bottom
-    <Container className="mt-5 pb-5"> {/* <-- 💡 FIX APPLIED HERE */}
-      <Row>
-        <Col md={4} className="text-center text-md-start">
-          <Image 
-            src={person.profile_path ? getImageUrl(person.profile_path) : 'https://via.placeholder.com/500x750.png?text=No+Image'} 
-            fluid 
-            rounded 
-          />
-        </Col>
-        <Col md={8}>
-          <h2>{person.name}</h2>
-          <p><strong>Born:</strong> {person.birthday || 'N/A'}</p>
-          <p><strong>Place of Birth:</strong> {person.place_of_birth || 'N/A'}</p>
-          <hr />
-          <h5>Biography</h5>
-          <p>{person.biography || 'No biography available.'}</p>
-        </Col>
-      </Row>
+    <div className="bg-black text-white" style={{ minHeight: '100vh', paddingTop: '40px' }}>
+      <Container className="py-5">
+        <Row className="mb-5">
+          {/* Left Column: Photo */}
+          <Col md={4} lg={3} className="text-center text-md-start mb-4">
+            <img 
+              src={person.profile_path 
+                ? `https://image.tmdb.org/t/p/w500${person.profile_path}` 
+                : 'https://via.placeholder.com/300x450?text=No+Image'}
+              alt={person.name} 
+              className="img-fluid rounded shadow-lg"
+              style={{ border: '1px solid #333' }}
+            />
+          </Col>
 
-      {/* --- Known For Section --- */}
-      <hr className="my-5" />
-      <h3 className="mb-4">Known For</h3>
-      <Row xs={1} sm={2} md={3} lg={4} xl={5} className="g-4">
-        {movies.map((movie) => (
-          <MovieCard key={movie.credit_id} movie={movie} />
-        ))}
-      </Row>
-    </Container>
+          {/* Right Column: Info */}
+          <Col md={8} lg={9}>
+            <h1 className="display-4 fw-bold">{person.name}</h1>
+            
+            <div className="d-flex gap-3 text-secondary fw-bold mb-4">
+              {person.birthday && <span>Born: {person.birthday}</span>}
+              {person.place_of_birth && <span>• {person.place_of_birth}</span>}
+            </div>
+
+            {person.biography && (
+              <div className="mb-4">
+                <h4 className="fw-bold border-start border-4 border-danger ps-3 mb-3">Biography</h4>
+                <p className="lead" style={{ fontSize: '1rem', lineHeight: '1.7', opacity: 0.9 }}>
+                  {person.biography.length > 800 
+                    ? `${person.biography.slice(0, 800)}...` 
+                    : person.biography}
+                </p>
+              </div>
+            )}
+          </Col>
+        </Row>
+
+        {/* Known For Section */}
+        {credits.length > 0 && (
+          <>
+            <h3 className="fw-bold border-start border-4 border-danger ps-3 mb-4">Known For</h3>
+            <Row>
+              {credits.slice(0, 18).map(item => (
+                <Col key={item.id} xs={6} sm={4} md={3} lg={2} className="mb-4">
+                  <MovieCard item={item} />
+                </Col>
+              ))}
+            </Row>
+          </>
+        )}
+      </Container>
+    </div>
   );
 };
 

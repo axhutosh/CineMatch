@@ -27,11 +27,13 @@ export const searchMovies = (query, page = 1) => {
   });
 };
 
+// 👇 UPDATED FUNCTION (Fixed to fetch Cast & Recs)
 export const getMovieDetails = (movieId) => {
   return apiClient.get('', {
     params: {
       path: `/movie/${movieId}`,
-      append_to_response: 'videos,release_dates',
+      // ⚡️ ADDED: credits, recommendations, similar, images
+      append_to_response: 'videos,release_dates,credits,recommendations,similar,images',
     },
   });
 };
@@ -44,6 +46,10 @@ export const getRecommendedMovies = (movieId) => {
 
 export const getMovieCredits = (movieId) => {
   return apiClient.get('', { params: { path: `/movie/${movieId}/credits` } });
+};
+
+export const getMovieVideos = (movieId) => {
+  return apiClient.get('', { params: { path: `/movie/${movieId}/videos` } });
 };
 
 export const getPersonDetails = (personId) => {
@@ -132,41 +138,25 @@ export const getRomComMovies = (page = 1) => {
   return apiClient.get('', {
     params: {
       path: '/discover/movie',
-      with_genres: '10749,35', // Romance (10749) AND Comedy (35)
+      with_genres: '10749,35', 
       page: page,
     },
   });
 };
 
-// --- 👇 ADD THIS NEW FUNCTION ---
-
-/**
- * Fetches Romantic Comedy TV Shows (Genre 10749 AND 35)
- */
 export const getRomComTvShows = (page = 1) => {
   return apiClient.get('', {
     params: {
       path: '/discover/tv',
-      with_genres: '10749,35', // Romance (10749) AND Comedy (35)
+      with_genres: '10749,35',
       page: page,
     },
   });
 };
-// src/services/tmdbApi.js
 
-// ... (keep all your existing code) ...
-
-/**
- * Fetches massive data for the spatial wall.
- */
 export const getMassiveWallData = async () => {
-  // Fetch pages 1 to 15 (300 items) to fill the wall
-  // We use a loop to generate the page numbers
   const pagesToFetch = Array.from({ length: 50 }, (_, i) => i + 1);
   
-  // WARNING: This fires 15 requests at once. 
-  // If you see "Failed to load", the API limit might be hit.
-  // We can batch them if needed, but let's try parallel first for speed.
   const requests = pagesToFetch.map(page => 
     apiClient.get('', { params: { path: '/trending/all/week', page: page } })
   );
@@ -181,6 +171,14 @@ export const getMassiveWallData = async () => {
     }
   });
 
-  // Shuffle nicely
   return allMovies.sort(() => Math.random() - 0.5);
+};
+
+export const getTvDetails = (tvId) => {
+  return apiClient.get('', {
+    params: {
+      path: `/tv/${tvId}`,
+      append_to_response: 'videos,credits,recommendations,similar',
+    },
+  });
 };

@@ -4,12 +4,13 @@ import { Container } from 'react-bootstrap';
 
 const tmdbLogo = 'https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_2-d537fb228cf3ded904ef09b136fe3fec72548ebc1fea3fbbd1ad9e36364db38b.svg';
 
-const Footer = () => {
+// 1. Accept the 'isFixed' prop
+const Footer = ({ isFixed }) => {
   const currentYear = new Date().getFullYear();
 
   return (
-    // 1. REMOVED bg="dark" and text-white
-    <footer className="footer mt-auto py-1">
+    // 2. Add the conditional class logic here
+    <footer className={`footer mt-auto py-1 ${isFixed ? 'footer-fixed' : ''}`}>
       <Container className="text-center">
         
         <div className="d-flex justify-content-center align-items-center mb-1">
@@ -27,8 +28,6 @@ const Footer = () => {
         <div style={{ fontSize: '0.8rem', color: '#aaa' }}>
           &copy; CineMatch {currentYear}
         </div>
-        
-        {/* --- TMDB ATTRIBUTION TEXT REMOVED --- */}
         
       </Container>
     </footer>

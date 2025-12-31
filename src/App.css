@@ -129,45 +129,29 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   text-decoration: none !important;
 }
 
-/* --- 💡 HORIZONTAL SCROLL STYLES FIX 💡 --- */
+/* --- HORIZONTAL SCROLL FIX --- */
 .horizontal-scroll-wrapper {
-  overflow-x: auto; /* 1. FIX: Changed from 'hidden' to 'auto' to allow scrolling */
-  /* overflow-y: hidden; <-- 2. FIX: REMOVED this line to prevent hover clipping */
-  padding-top: 10px; /* 3. ADDED: Gives room for card to scale up on hover */
+  overflow-x: auto;
+  padding-top: 10px;
   padding-bottom: 15px;
-  -ms-overflow-style: none;  /* Hides scrollbar in IE/Edge */
-  scrollbar-width: none;     /* Hides scrollbar in Firefox */
-  scroll-behavior: smooth; /* Smooth scrolling for buttons */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
 }
-/* Hides scrollbar in Chrome/Safari */
 .horizontal-scroll-wrapper::-webkit-scrollbar {
   display: none;
 }
-/* --- END OF FIX --- */
 
-
-/* --- CARD SIZING FOR ROWS --- */
+/* --- CARD SIZING --- */
 .category-col {
   width: 200px; 
   flex-shrink: 0;
 }
-@media (max-width: 1200px) {
-  .category-col {
-    width: 180px; 
-  }
-}
-@media (max-width: 768px) {
-  .category-col {
-    width: 160px; 
-  }
-}
-@media (max-width: 576px) {
-  .category-col {
-    width: 140px; 
-  }
-}
+@media (max-width: 1200px) { .category-col { width: 180px; } }
+@media (max-width: 768px) { .category-col { width: 160px; } }
+@media (max-width: 576px) { .category-col { width: 140px; } }
 
-/* --- SCROLL ARROW STYLES --- */
+/* --- SCROLL ARROW --- */
 .scroll-arrow {
   position: absolute;
   top: 50%;
@@ -186,9 +170,7 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   border: none;
   background-color: transparent;
 }
-.category-row-container:hover .scroll-arrow {
-  opacity: 1;
-}
+.category-row-container:hover .scroll-arrow { opacity: 1; }
 .scroll-arrow.left {
   left: 0;
   background: linear-gradient(to right, rgba(33, 37, 41, 0.9) 0%, rgba(33, 37, 41, 0) 100%);
@@ -197,25 +179,16 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   right: 0;
   background: linear-gradient(to left, rgba(33, 37, 41, 0.9) 0%, rgba(33, 37, 41, 0) 100%);
 }
-.scroll-arrow.hidden {
-  opacity: 0;
-  cursor: default;
-  pointer-events: none;
-}
+.scroll-arrow.hidden { opacity: 0; cursor: default; pointer-events: none; }
 .scroll-arrow:focus, .scroll-arrow:active {
   box-shadow: none !important;
   color: white !important;
   outline: none !important;
 }
-.scroll-arrow:hover {
-  color: #1abc9c; /* Teal hover color */
-}
+.scroll-arrow:hover { color: #1abc9c; }
 
-/* --- NAVIGATION DOTS STYLES --- */
-.pagination-dots {
-  display: flex;
-  align-items: center;
-}
+/* --- NAVIGATION DOTS --- */
+.pagination-dots { display: flex; align-items: center; }
 .dot {
   display: inline-block;
   width: 8px;
@@ -235,57 +208,49 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   transform: scale(1.2);
 }
 
-
 /* --- DARK THEME STYLES --- */
 body[data-bs-theme="dark"] {
   background-color: #212529;
   color: #dee2e6;
 }
-/* 1. NAVBAR: Floating Gradient from Top */
-.navbar {
-  position: fixed !important; /* Float over the content */
-  top: 0;
+
+/* ⚠️ IMPORTANT: I REMOVED THE .navbar BLOCK HERE TO FIX THE BLUR ⚠️ */
+
+/* --- FOOTER STYLES --- */
+.footer {
+  /* 1. Default Behavior: Normal positioning at the bottom */
+  position: relative;
   width: 100%;
-  z-index: 5000; /* Stay on top of everything */
+  margin-top: auto; /* Pushes it to bottom in flex container */
   
-  /* The Gradient: Solid black at top, fading to transparent */
-  background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%) !important;
-  
-  border: none !important; /* Remove border */
-  backdrop-filter: blur(2px); /* Optional: Subtle blur for readability */
-  padding-top: 15px;
-  padding-bottom: 30px; /* Extra padding for the gradient to fade out nicely */
+  /* 2. Visuals: Black-to-Transparent Gradient */
+  background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%);
+  border: none;
+  padding-top: 40px; 
+  padding-bottom: 10px;
+  pointer-events: none; /* Clicks pass through the transparent part */
+  z-index: 10;
 }
 
-/* 2. FOOTER: Floating Gradient at Bottom */
-.footer {
-  position: fixed !important; /* Float at the bottom of the screen */
+/* 3. The "Stuck" Mode (Only for Infinite Home) */
+.footer.footer-fixed {
+  position: fixed !important;
   bottom: 0;
-  width: 100%;
-  z-index: 5000;
-  
-  /* The Gradient: Transparent at top, fading to solid black at bottom */
-  background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%) !important;
-  
-  border: none !important;
-  padding-top: 40px; /* Space for gradient */
-  padding-bottom: 10px;
-  pointer-events: none; /* Lets you click movies *under* the transparent part of footer */
+  left: 0;
+  z-index: 5000; /* Stays on top of the infinite wall */
 }
-/* Enable clicking on links inside the footer (Name, Copyright) */
+
+/* Enable clicking links inside the footer */
 .footer .container {
   pointer-events: auto; 
 }
 
-/* 3. BODY ADJUSTMENT */
-/* Ensure the grid goes all the way to the edges behind the nav/footer */
-.spatial-grid {
-  padding-top: 80px; /* Push content down slightly so first row isn't hidden */
-  padding-bottom: 100px; /* Push content up so last row isn't hidden */
+/* Text Shadows */
+.footer-name, .footer div {
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
 }
 
-/* 4. TEXT SHADOWS */
-/* Make text readable against posters */
+/* 3. TEXT SHADOWS */
 .navbar-brand, .nav-link, .footer-name, .footer div {
   text-shadow: 0 2px 4px rgba(0,0,0,0.8);
 } 
@@ -320,41 +285,31 @@ body[data-bs-theme="dark"] {
   filter: drop-shadow(0 0 5px rgba(220, 53, 69, 0.5));
   transform: scale(1.1);
 }
-/* src/App.css */
 
-/* ... keep your existing styles ... */
-/* --- 🌌 SPATIAL UI STYLES (EDGE-TO-EDGE FINAL) 🌌 --- */
-
-/* The Viewport (Window) */
+/* --- 🌌 SPATIAL UI STYLES 🌌 --- */
 .spatial-container {
   background-color: #000;
-  height: 100vh; /* Full screen fixed height */
+  height: 100vh; 
   width: 100%;
-  overflow: hidden; /* Hide native scrollbars completely */
+  overflow: hidden; 
   position: relative;
-  touch-action: none; /* Stop browser gestures */
+  touch-action: none; 
 }
 
-/* The Moving Wall */
 .spatial-grid {
   display: grid;
-  /* 45px texture size */
   grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); 
   gap: 1px;
   width: 100%;
   background-color: #000;
-  
-  /* 💡 FINAL FIX: Remove all padding for edge-to-edge look */
-  padding: 0;
-  
-  min-height: 100vh; /* Ensure it fills screen */
+  padding: 0; /* Full edge-to-edge */
+  min-height: 100vh;
 }
 
 .micro-card {
   position: relative;
   aspect-ratio: 2/3;
   overflow: visible;
-  /* Important: pass events through to the draggable parent */
   pointer-events: auto; 
 }
 
@@ -363,20 +318,11 @@ body[data-bs-theme="dark"] {
   height: 100%;
   object-fit: cover;
   display: block;
-
-  /* Base State */
   filter: brightness(0.6) grayscale(0.5) contrast(0.9);
   border-radius: 1px;
-  
-  /* Physics */
-  transition: 
-    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-    filter 0.2s ease-out,
-    box-shadow 0.2s ease-out,
-    border-radius 0.2s ease-out;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease-out, box-shadow 0.2s ease-out, border-radius 0.2s ease-out;
 }
 
-/* --- HOVER POP-OUT --- */
 .micro-card:hover {
   z-index: 2000;
 }
@@ -385,13 +331,9 @@ body[data-bs-theme="dark"] {
   transform: scale(5);
   filter: brightness(1.1) grayscale(0) contrast(1.05);
   border-radius: 4px;
-  box-shadow: 
-    0 30px 60px rgba(0,0,0,0.9),
-    0 0 20px rgba(80, 120, 255, 0.2),
-    0 0 2px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.9), 0 0 20px rgba(80, 120, 255, 0.2), 0 0 2px rgba(255, 255, 255, 0.5);
 }
 
-/* Mobile */
 @media (max-width: 768px) {
   .spatial-grid {
     grid-template-columns: repeat(auto-fill, minmax(35px, 1fr));

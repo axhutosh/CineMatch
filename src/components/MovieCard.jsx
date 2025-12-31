@@ -5,21 +5,17 @@ import { Col, Card, Button } from 'react-bootstrap';
 import { FaStar, FaHeart, FaRegHeart } from 'react-icons/fa';
 import { addFavorite, removeFavorite, isFavorite } from '../utils/favorites';
 
-// 1. Rename 'movie' prop to 'item' to be more generic
-const MovieCard = ({ item }) => {
+// Accepts 'item' (movie/show data) and '...props' (for styling overrides like width)
+const MovieCard = ({ item, ...props }) => {
   
-  // 2. Add safety checks for the new 'item' prop
   const [isFav, setIsFav] = useState(item ? isFavorite(item.id) : false);
   const navigate = useNavigate();
 
-  if (!item) {
-    return null; // Don't render if the item is bad
-  }
+  if (!item) return null;
 
-  // 3. Determine if it's a movie or TV show. Movies have 'title', TV shows have 'name'.
   const isMovie = !!item.title;
-  const title = item.title || item.name; // Use whichever one exists
-  const navigatePath = isMovie ? `/movie/${item.id}` : `/tv/${item.id}`; // Set the correct path
+  const title = item.title || item.name; 
+  const navigatePath = isMovie ? `/movie/${item.id}` : `/tv/${item.id}`;
 
   const handleFavoriteClick = (e) => {
     e.preventDefault();
@@ -29,60 +25,62 @@ const MovieCard = ({ item }) => {
       removeFavorite(item.id);
       setIsFav(false);
     } else {
-      // Add a 'media_type' to the object before saving
-      // This helps our Favorites page know where to link back to
-      const itemToSave = {
-        ...item,
-        media_type: isMovie ? 'movie' : 'tv',
-      };
+      const itemToSave = { ...item, media_type: isMovie ? 'movie' : 'tv' };
       addFavorite(itemToSave); 
       setIsFav(true);
     }
   };
   
   const handleCardClick = () => {
-    // 4. Navigate to the correct path
     navigate(navigatePath);
   };
   
   const displayRating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
 
   return (
-    <Col onClick={handleCardClick} style={{ cursor: 'pointer' }}>
-      <Card className="h-100 shadow-sm">
+    // Spread ...props here to allow parent components to set fixed widths
+    <Col onClick={handleCardClick} style={{ cursor: 'pointer', ...props.style }} className={props.className}>
+      <Card 
+        className="h-100 shadow-sm border-0" 
+        style={{ backgroundColor: '#000', color: 'white' }} // 💡 Pure Black Background
+      >
         
         {/* Poster section */}
-        <div className="position-relative">
+        <div className="position-relative" style={{ aspectRatio: '2/3', overflow: 'hidden', borderRadius: '4px 4px 0 0' }}>
           {item.poster_path ? (
             <Card.Img
               variant="top"
               src={`https://image.tmdb.org/t/p/w300${item.poster_path}`}
-              alt={title} // Use the generic title
+              alt={title}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           ) : (
-            <div className="no-image-placeholder">
-              <span>{title}</span>
+            <div className="no-image-placeholder d-flex align-items-center justify-content-center h-100 bg-secondary text-white">
+              <span className="small text-center px-2">{title}</span>
             </div>
           )}
         </div>
         
-        <Card.Body className="d-flex flex-column">
-          {/* 5. Display the generic title */}
-          <Card.Title className="fs-6 fw-bold mb-2" style={{minHeight: '40px'}}>
+        {/* Compact Body */}
+        <Card.Body className="d-flex flex-column p-2"> 
+          {/* Title: Truncated to 1 line */}
+          <Card.Title className="fs-6 fw-bold mb-1 text-truncate" title={title}>
             {title}
           </Card.Title>
+          
           <div className="d-flex justify-content-between align-items-center mt-auto">
-            <Card.Text className="text-muted mb-0">
-              <FaStar className="text-warning mb-1" />
-              {' '} {displayRating}
+            <Card.Text className="text-secondary small mb-0 fw-bold">
+              <FaStar className="text-warning mb-1 me-1" />
+              {displayRating}
             </Card.Text>
 
             <Button
-              className={`p-0 fs-4 favorite-button btn-no-style ${isFav ? 'is-favorite' : ''}`}
+              className={`p-0 fs-5 favorite-button btn-no-style ${isFav ? 'is-favorite' : ''}`}
               onClick={handleFavoriteClick}
               aria-label="Add to favorites"
+              style={{ color: '#888' }}
             >
-              {isFav ? <FaHeart /> : <FaRegHeart />}
+              {isFav ? <FaHeart className="text-danger" /> : <FaRegHeart />}
             </Button>
           </div>
         </Card.Body>

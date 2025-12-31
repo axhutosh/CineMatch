@@ -1,95 +1,89 @@
 // src/pages/MovieDetailsPage.jsx
-
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { getMovieDetails, getRecommendedMovies, getMovieCredits } from '../services/tmdbApi';
-import { Container, Row, Col, Image, Spinner, Alert, Badge, Button } from 'react-bootstrap'; 
-import { FaStar, FaClock, FaPlayCircle, FaHeart, FaRegHeart } from 'react-icons/fa'; 
+import React, { useEffect, useState, useRef } from 'react';
+import { useParams, useLocation, Link } from 'react-router-dom';
+import { Container, Row, Col, Badge, Button, Spinner } from 'react-bootstrap';
+import { FaStar, FaPlay, FaHeart, FaRegHeart, FaYoutube, FaDownload, FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { getMovieDetails, getTvDetails } from '../services/tmdbApi';
+import { addFavorite, removeFavorite, isFavorite } from '../utils/favorites';
 import MovieCard from '../components/MovieCard';
-import YouTube from 'react-youtube';
-import { addFavorite, removeFavorite, isFavorite } from '../utils/favorites'; 
 
 const MovieDetailsPage = () => {
   const { id } = useParams();
+  const location = useLocation();
+  
   const [movie, setMovie] = useState(null);
-  const [recommendedMovies, setRecommendedMovies] = useState([]);
-  const [cast, setCast] = useState([]);
-  const [rating, setRating] = useState('');
-  const [trailerKey, setTrailerKey] = useState(null); 
-  const [showPlayer, setShowPlayer] = useState(false); 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [isFav, setIsFav] = useState(false);
+  const [showTrailer, setShowTrailer] = useState(false);
+  const [trailerKey, setTrailerKey] = useState(null);
+  const [ratingCert, setRatingCert] = useState('NR');
+  
+  const [showBgVideo, setShowBgVideo] = useState(false);
+  const timerRef = useRef(null);
+
+  const castScrollRef = useRef(null);
+  const recScrollRef = useRef(null);
+
+  const isTv = location.pathname.includes('/tv/');
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-
-    const fetchAllData = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        setTrailerKey(null);
-        setShowPlayer(false);
-        setRating(''); 
+        setShowTrailer(false);
+        setShowBgVideo(false);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        const fetchFunction = isTv ? getTvDetails : getMovieDetails;
+        const response = await fetchFunction(id);
+        const data = response.data.body ? JSON.parse(response.data.body) : response.data;
         
-        const [detailsResponse, recommendResponse, creditsResponse] = await Promise.all([
-          getMovieDetails(id), 
-          getRecommendedMovies(id),
-          getMovieCredits(id) 
-        ]);
+        setMovie(data);
+        setIsFav(isFavorite(data.id));
 
-        const parseData = (res) => res.data.body ? JSON.parse(res.data.body) : res.data;
-
-        const movieData = parseData(detailsResponse);
-        const recommendationsData = parseData(recommendResponse);
-        const creditsData = parseData(creditsResponse); 
+        const videos = data.videos?.results || [];
+        const trailer = videos.find(v => v.type === 'Trailer' && v.site === 'YouTube') 
+                     || videos.find(v => v.site === 'YouTube');
         
-        setMovie(movieData);
-        setRecommendedMovies(recommendationsData.results || []); 
-        setCast(creditsData.cast || []); 
-        setIsFav(isFavorite(movieData.id));
+        if (trailer) {
+          setTrailerKey(trailer.key);
+          timerRef.current = setTimeout(() => {
+            setShowBgVideo(true);
+          }, 1500);
+        } else {
+          setTrailerKey(null);
+        }
 
-        // --- RATING LOGIC ---
-        const usRelease = movieData.release_dates?.results.find(
-          (r) => r.iso_3166_1 === 'US'
-        );
-        let certification = usRelease?.release_dates.find(
-          (r) => r.certification
-        )?.certification;
-        if (!certification) {
-          const anyRelease = movieData.release_dates?.results.find(
-            (r) => r.release_dates.length > 0 && r.release_dates.find(d => d.certification)
-          );
-          if (anyRelease) {
-            certification = anyRelease.release_dates.find(d => d.certification).certification;
+        let cert = 'NR';
+        if (isTv) {
+          const contentRatings = data.content_ratings?.results || [];
+          const usRating = contentRatings.find(r => r.iso_3166_1 === 'US');
+          if (usRating) cert = usRating.rating;
+        } else {
+          const releases = data.release_dates?.results || [];
+          const usRelease = releases.find(r => r.iso_3166_1 === 'US');
+          if (usRelease) {
+            const found = usRelease.release_dates.find(d => d.certification !== '');
+            if (found) cert = found.certification;
           }
         }
-        setRating(certification || 'NR');
-        // --- END RATING ---
+        setRatingCert(cert);
 
-        // --- TRAILER LOGIC ---
-        const videos = movieData?.videos?.results || [];
-        const videoToPlay = 
-          videos.find((video) => video.site === 'YouTube' && video.type === 'Trailer') ||
-          videos.find((video) => video.site === 'YouTube');
-        if (videoToPlay) {
-          setTrailerKey(videoToPlay.key);
-        }
-        // --- END TRAILER ---
-
-        setError(null);
-
-      } catch (err) {
-        setError('Failed to fetch movie details.');
-        console.error(err);
+      } catch (error) {
+        console.error("Error fetching details:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAllData();
-  }, [id]); 
+    fetchData();
 
-  const handleFavoriteClick = () => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [id, isTv]);
+
+  const handleFavorite = () => {
     if (isFav) {
       removeFavorite(movie.id);
       setIsFav(false);
@@ -99,197 +93,310 @@ const MovieDetailsPage = () => {
     }
   };
 
-  // --- 💡 NEW WATCH HANDLER 💡 ---
-  const handleWatchNow = () => {
-    if (!movie) return;
-    // Logic: "Movie Title" + "full movie"
-    const query = `${movie.title} full movie`;
-    const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
-    window.open(youtubeUrl, '_blank');
+  const scroll = (ref, direction) => {
+    if (ref.current) {
+      const { current } = ref;
+      const scrollAmount = direction === 'left' ? -300 : 300;
+      current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
   };
 
-  if (loading) {
-    return (
-      <Container className="text-center mt-5">
-        <Spinner animation="border" variant="primary" />
-      </Container>
-    );
-  }
+  if (loading) return (
+    <div className="d-flex justify-content-center align-items-center vh-100 bg-black">
+      <Spinner animation="border" variant="light" />
+    </div>
+  );
+  
+  if (!movie) return <div className="text-center text-white p-5 mt-5">Content not found</div>;
 
-  if (error) {
-    return (
-      <Container className="mt-5">
-        <Alert variant="danger">{error}</Alert>
-      </Container>
-    );
-  }
-  if (!movie) return null; 
+  const title = movie.title || movie.name;
+  const date = movie.release_date || movie.first_air_date;
+  const year = date ? date.split('-')[0] : 'N/A';
+  const runtime = movie.runtime 
+    ? `${movie.runtime}m` 
+    : (movie.episode_run_time?.[0] ? `${movie.episode_run_time[0]}m` : 'N/A');
+  
+  const recommendations = movie.recommendations?.results || movie.similar?.results || [];
+  const cast = movie.credits?.cast || [];
 
-  const getImageUrl = (path, size = "w500") => `https://image.tmdb.org/t/p/${size}${path}`;
-
-  const playerOptions = {
-    height: '100%',
-    width: '100%',
-    playerVars: { autoplay: 1 },
-  };
+  const ScrollBtn = ({ direction, onClick }) => (
+    <button
+      onClick={onClick}
+      style={{
+        position: 'absolute',
+        top: 0,
+        bottom: '16px',
+        [direction]: 0,
+        zIndex: 10,
+        width: '50px',
+        border: 'none',
+        color: 'white',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer',
+        background: direction === 'left' 
+          ? 'linear-gradient(to right, rgba(0,0,0,0.9) 0%, transparent 100%)'
+          : 'linear-gradient(to left, rgba(0,0,0,0.9) 0%, transparent 100%)',
+        opacity: 0.5,
+        transition: 'all 0.3s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.opacity = '1';
+        e.currentTarget.style.background = direction === 'left' 
+          ? 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.3) 100%)'
+          : 'linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.3) 100%)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.opacity = '0.5';
+        e.currentTarget.style.background = direction === 'left' 
+          ? 'linear-gradient(to right, rgba(0,0,0,0.9) 0%, transparent 100%)'
+          : 'linear-gradient(to left, rgba(0,0,0,0.9) 0%, transparent 100%)';
+      }}
+    >
+      {direction === 'left' ? <FaChevronLeft size={28} /> : <FaChevronRight size={28} />}
+    </button>
+  );
 
   return (
-    <Container className="mt-5 pb-5"> 
-      <Row>
-        <Col md={4} className="text-center text-md-start">
-          <Image src={getImageUrl(movie.poster_path)} fluid rounded />
-        </Col>
-        <Col md={8}>
-          
-          <div className="d-flex align-items-center mb-2">
-            <h2 className="mb-0 me-3">{movie.title}</h2>
-            <Button
-              variant="link"
-              className="p-0 fs-3 text-danger"
-              onClick={handleFavoriteClick}
-              aria-label="Add to favorites"
-              style={{ textDecoration: 'none' }}
-            >
-              {isFav ? <FaHeart /> : <FaRegHeart />}
-            </Button>
-          </div>
+    <div className="text-white bg-black" style={{ minHeight: '100vh' }}>
+      
+      {/* 🎥 HERO SECTION */}
+      <div 
+        style={{
+          position: 'relative',
+          marginTop: '-90px',
+          paddingTop: '150px',
+          paddingBottom: '80px',
+          marginBottom: '20px',
+          overflow: 'hidden',
+          minHeight: '100vh' 
+        }}
+      >
+        {/* 1. BACKGROUND LAYER */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+          {showBgVideo && trailerKey && !showTrailer ? (
+             <iframe
+               src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&mute=1&controls=0&loop=1&playlist=${trailerKey}&modestbranding=1&showinfo=0&rel=0&iv_load_policy=3&fs=0`}
+               title="Background Video"
+               frameBorder="0"
+               allow="autoplay; encrypted-media"
+               style={{ 
+                 position: 'absolute', 
+                 top: '50%', 
+                 left: '30%',
+                 width: '90vw', 
+                 height: '65vw',
+                 minHeight: '110vh', 
+                 transform: 'translateY(-50%)',
+                 pointerEvents: 'none',
+                 filter: 'brightness(0.8)'
+               }}
+             />
+          ) : (
+            <div 
+              style={{
+                width: '100%',
+                height: '100%',
+                backgroundImage: `url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'top center',
+                transition: 'background-image 0.5s ease-in-out'
+              }}
+            />
+          )}
+        </div>
 
-          <p className="text-muted">{movie.tagline}</p>
-          <p>{movie.overview}</p>
-          
-          <div className="mb-3">
-            <strong>Rating: </strong>
-            <FaStar className="text-warning mb-1" /> {movie.vote_average.toFixed(1)} / 10
-          </div>
-          
-          <div className="mb-3">
-            <strong>Runtime: </strong>
-            <FaClock className="me-1" /> {movie.runtime} minutes
-          </div>
+        {/* 2. GRADIENT OVERLAYS */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #000 30%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0.2) 100%)', zIndex: 1 }}></div>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '200px', background: 'linear-gradient(to bottom, #000 10%, transparent 100%)', zIndex: 1 }}></div>
+        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '300px', background: 'linear-gradient(to top, #000 20%, transparent 100%)', zIndex: 1 }}></div>
 
-          <div className="mb-3">
-            <strong>Genres: </strong>
-            {movie.genres.map(genre => (
-              <Link 
-                to={`/discover/genre/${genre.id}`}
-                key={genre.id}
-                state={{ genreName: genre.name }}
-                className="text-decoration-none"
-              >
-                <Badge 
-                  pill 
-                  bg="info" 
-                  className="me-2" 
-                  style={{cursor: 'pointer'}}
+        {/* 3. CONTENT LAYER */}
+        <Container style={{ position: 'relative', zIndex: 2 }}>
+          <Row className="align-items-start">
+            
+            <Col md={7} lg={6}> 
+              
+              <div className="d-flex align-items-center gap-2 mb-2">
+                <h1 className="display-4 fw-bold mb-0" style={{ textShadow: '2px 2px 4px #000' }}>{title}</h1>
+                <button 
+                  onClick={handleFavorite} 
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    padding: 0, 
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                  title="Add to Favorites"
                 >
-                  {genre.name}
-                </Badge>
-              </Link>
-            ))}
-          </div>
+                  {isFav ? (
+                    <FaHeart size={36} color="#dc3545" /> 
+                  ) : (
+                    <FaRegHeart size={36} color="#dc3545" /> 
+                  )}
+                </button>
+              </div>
 
-          {rating && (
-            <div className="mb-3">
-              <strong>Parental Rating: </strong>
-              <Badge pill bg="info" className="me-2">
-                {rating}
-              </Badge>
-            </div>
-          )}
+              {movie.tagline && (
+                <p className="fs-5 text-white-50 fst-italic mb-3" style={{ textShadow: '1px 1px 2px #000' }}>
+                  {movie.tagline}
+                </p>
+              )}
+              
+              <div className="d-flex align-items-center gap-3 mb-3 text-white-50 fw-bold" style={{ fontSize: '0.95rem' }}>
+                <span className="text-white border border-secondary px-2 py-0 rounded bg-dark">{ratingCert}</span>
+                <span>{year}</span>
+                <span>•</span>
+                <span>{runtime}</span>
+                <span>•</span>
+                <span className="text-warning d-flex align-items-center gap-1">
+                  <FaStar /> {movie.vote_average?.toFixed(1)}
+                </span>
+              </div>
+              
+              <div className="mb-4">
+                {movie.genres?.map(g => (
+                  <Link 
+                    key={g.id} 
+                    to={`/genre/${isTv ? 'tv' : 'movie'}/${g.id}/${encodeURIComponent(g.name)}`} 
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <Badge 
+                      bg="danger" 
+                      className="me-2 px-3 py-2 fw-normal"
+                      style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
+                      onMouseOver={(e) => e.target.style.transform = 'scale(1.1)'}
+                      onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                    >
+                      {g.name}
+                    </Badge>
+                  </Link>
+                ))}
+              </div>
 
-          {/* --- 💡 REPLACED "VISIT WEBSITE" WITH "WATCH NOW" 💡 --- */}
-          <button 
-            className="btn btn-danger" 
-            onClick={handleWatchNow}
-            style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '8px',
-              borderRadius: '20px', 
-              padding: '8px 24px',
-              fontWeight: 'bold',
-              border: 'none',
-              transition: 'transform 0.2s',
-              marginRight: '10px'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              width="20" 
-              height="20" 
-              fill="currentColor" 
-              viewBox="0 0 16 16"
-            >
-              <path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
-            </svg>
-            Watch Now
-          </button>
+              <p className="lead text-light" style={{ fontSize: '1.1rem', lineHeight: '1.6', opacity: 0.95, textShadow: '1px 1px 2px #000' }}>
+                {movie.overview}
+              </p>
+              
+              <div className="d-flex flex-wrap align-items-center gap-3 mt-4">
+                {trailerKey && (
+                  <Button 
+                    variant={showTrailer ? "outline-light" : "light"}
+                    className="rounded-pill px-4 py-2 d-flex align-items-center gap-2"
+                    onClick={() => setShowTrailer(!showTrailer)}
+                  >
+                    {showTrailer ? <FaTimes /> : <FaPlay size={14} />} 
+                    {showTrailer ? "Close Trailer" : "Watch Trailer"}
+                  </Button>
+                )}
 
-          {trailerKey && (
-            <Button 
-              variant="outline-light"
-              className="ms-2" 
-              onClick={() => setShowPlayer(!showPlayer)}
-            >
-              <FaPlayCircle className="me-1" /> 
-              {showPlayer ? 'Hide Trailer' : 'Watch Trailer'}
-            </Button>
-          )}
+                <a 
+                   href={`https://www.youtube.com/results?search_query=${encodeURIComponent(title + " full movie")}`}
+                   target="_blank" rel="noreferrer"
+                   className="btn btn-danger rounded-pill px-4 py-2 d-flex align-items-center gap-2"
+                   style={{ textDecoration: 'none' }}
+                >
+                  <FaYoutube size={18} /> Watch Now
+                </a>
 
-          {showPlayer && trailerKey && (
-            <div className="ratio ratio-16x9 mt-4 rounded overflow-hidden">
-              <YouTube 
-                videoId={trailerKey} 
-                opts={playerOptions}
-                className="youtube-player"
-                style={{ width: '100%', height: '100%' }}
-              />
-            </div>
-          )}
-        </Col>
-      </Row>
+                <Button 
+                  disabled 
+                  variant="secondary"
+                  className="rounded-pill px-4 py-2 d-flex align-items-center gap-2"
+                  style={{ opacity: 0.5, cursor: 'not-allowed' }}
+                >
+                  <FaDownload size={14} /> Download
+                </Button>
+              </div>
 
-      {/* --- CAST SECTION --- */}
-      <hr className="my-5" />
-      <h3 className="mb-4">Top Cast</h3>
-      <div className="cast-scroller">
-        <Row className="flex-nowrap">
-          {cast.slice(0, 10).map((actor) => ( 
-            <Col xs={4} sm={3} md={2} key={actor.cast_id} className="cast-card">
-              <Link 
-                to={`/person/${actor.id}`} 
-                className="text-decoration-none text-light"
-              >
-                <Image 
-                  src={actor.profile_path ? getImageUrl(actor.profile_path, "w200") : 'https://via.placeholder.com/200x300.png?text=No+Image'} 
-                  roundedCircle 
-                  className="cast-img"
-                />
-                <strong className="d-block mt-2">{actor.name}</strong>
-                <span className="text-white-50">{actor.character}</span>
-              </Link>
+              {showTrailer && trailerKey && (
+                <div className="mt-4 rounded overflow-hidden shadow-lg animate-fade-in" style={{ maxWidth: '800px', aspectRatio: '16/9' }}>
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0`}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              )}
+
             </Col>
-          ))}
-        </Row>
+            
+            <Col md={5} lg={6}></Col>
+          </Row>
+        </Container>
       </div>
 
-      {/* --- Recommendations Section --- */}
-      <hr className="my-5" />
-      <h3 className="mb-4">Recommendations</h3>
-      <Row xs={1} sm={2} md={3} lg={4} xl={5} className="g-4">
-        {recommendedMovies.length > 0 ? ( 
-          recommendedMovies.slice(0, 5).map((movie) => ( 
-            <MovieCard key={movie.id} movie={movie} />
-          ))
-        ) : (
-          <Col>
-            <p>No recommendations found.</p> 
-          </Col>
-        )}
-      </Row>
-    </Container> 
+      {/* ⚡️ CAST ROW: Clickable Links Added Here */}
+      {cast.length > 0 && (
+        <Container className="mb-5 position-relative">
+          <h4 className="mb-3 text-white fw-bold">Top Cast</h4>
+          
+          <div className="position-relative">
+            <ScrollBtn direction="left" onClick={() => scroll(castScrollRef, 'left')} />
+            
+            <div 
+              ref={castScrollRef}
+              className="d-flex overflow-auto pb-3 px-4" 
+              style={{ gap: '16px', scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth' }}
+            >
+              {cast.slice(0, 15).map(person => (
+                // ⚡️ FIX: Wrapped in Link to /person/:id
+                <Link 
+                  key={person.id} 
+                  to={`/person/${person.id}`} 
+                  className="text-decoration-none text-white"
+                >
+                  <div className="text-center hover-scale" style={{ minWidth: '110px' }}>
+                    <img 
+                      src={person.profile_path ? `https://image.tmdb.org/t/p/w200${person.profile_path}` : 'https://via.placeholder.com/200x300?text=No+Img'}
+                      alt={person.name}
+                      className="rounded-circle mb-2 object-fit-cover shadow-sm"
+                      style={{ width: '90px', height: '90px', border: '2px solid #333' }}
+                    />
+                    <p className="small mb-0 fw-bold text-truncate" style={{ maxWidth: '110px' }}>{person.name}</p>
+                    <p className="small text-secondary text-truncate" style={{ maxWidth: '110px' }}>{person.character}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            <ScrollBtn direction="right" onClick={() => scroll(castScrollRef, 'right')} />
+          </div>
+        </Container>
+      )}
+
+      {/* RECOMMENDATIONS ROW */}
+      {recommendations.length > 0 && (
+        <Container className="pb-5 position-relative">
+          <h4 className="mb-3 text-white fw-bold">More Like This</h4>
+          
+          <div className="position-relative">
+            <ScrollBtn direction="left" onClick={() => scroll(recScrollRef, 'left')} />
+            
+            <div 
+              ref={recScrollRef}
+              className="d-flex overflow-auto pb-3 pt-2 px-4"
+              style={{ gap: '16px', scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth' }}
+            >
+              {recommendations.slice(0, 15).map(item => (
+                <MovieCard 
+                  key={item.id} 
+                  item={item} 
+                  style={{ width: '160px', minWidth: '160px' }}
+                />
+              ))}
+            </div>
+
+            <ScrollBtn direction="right" onClick={() => scroll(recScrollRef, 'right')} />
+          </div>
+        </Container>
+      )}
+    </div>
   );
 };
 
