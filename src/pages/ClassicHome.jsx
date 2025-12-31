@@ -138,6 +138,13 @@ const ClassicHome = () => {
     setActiveIndex(nextIndex);
   };
 
+  // ⚡️ HELPER: Formats title for Sflix search (lowercase + hyphens)
+  const getSflixUrl = (title) => {
+    if (!title) return '#';
+    const slug = title.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-');
+    return `https://sflix2.to/search/${slug}`;
+  };
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100 bg-black">
@@ -150,7 +157,6 @@ const ClassicHome = () => {
     if (!movies || movies.length === 0) return null;
     return (
       <div className="mb-5">
-        {/* ⚡️ FIX: Changed px-4 to mx-4. This pushes the whole header (including the red border) away from the wall */}
         <h4 className="text-white mb-3 mx-4 fw-bold border-start border-4 border-danger ps-3">
           {title}
         </h4>
@@ -256,14 +262,15 @@ const ClassicHome = () => {
                   </p>
                   
                   <div className="d-flex gap-3 mt-4" style={{ pointerEvents: 'auto' }}>
+                    {/* ⚡️ UPDATE: Sflix Watch Now Button with Logic */}
                     <a 
-                      href={`https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title + " full movie")}`}
+                      href={getSflixUrl(movie.title)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn btn-danger btn-lg fw-bold px-4 rounded-pill shadow-lg d-inline-flex align-items-center gap-2"
                       style={{ textDecoration: 'none' }}
                     >
-                      <FaYoutube size={18} /> Watch Now
+                      <FaPlay size={18} /> Watch Now
                     </a>
                   </div>
                 </Carousel.Caption>

@@ -101,6 +101,33 @@ const MovieDetailsPage = () => {
     }
   };
 
+  // HELPER: Formats title for Sflix search (Slug format)
+  const getSflixUrl = (title) => {
+    if (!title) return '#';
+    const slug = title.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-');
+    return `https://sflix2.to/search/${slug}`;
+  };
+
+  // ⚡️ HELPER: Copy Name & Open Rexie Bot
+  const handleDownloadClick = async (e) => {
+    e.preventDefault();
+    try {
+      // 1. Copy Title
+      await navigator.clipboard.writeText(title);
+      
+      // 2. Alert User
+      alert(`✅ Movie Name Copied!\n\n1. Telegram will open.\n2. Simply PASTE (Ctrl+V) the name in the chat to download.`);
+      
+      // 3. Open Rexie Robot
+      window.open('https://t.me/Rexie_Robot', '_blank');
+      
+    } catch (err) {
+      console.error("Failed to copy", err);
+      // Fallback
+      window.open('https://t.me/Rexie_Robot', '_blank');
+    }
+  };
+
   if (loading) return (
     <div className="d-flex justify-content-center align-items-center vh-100 bg-black">
       <Spinner animation="border" variant="light" />
@@ -291,23 +318,25 @@ const MovieDetailsPage = () => {
                   </Button>
                 )}
 
+                {/* Sflix Watch Button */}
                 <a 
-                   href={`https://www.youtube.com/results?search_query=${encodeURIComponent(title + " full movie")}`}
+                   href={getSflixUrl(title)}
                    target="_blank" rel="noreferrer"
                    className="btn btn-danger rounded-pill px-4 py-2 d-flex align-items-center gap-2"
                    style={{ textDecoration: 'none' }}
                 >
-                  <FaYoutube size={18} /> Watch Now
+                  <FaPlay size={14} /> Watch Now
                 </a>
 
-                <Button 
-                  disabled 
-                  variant="secondary"
-                  className="rounded-pill px-4 py-2 d-flex align-items-center gap-2"
-                  style={{ opacity: 0.5, cursor: 'not-allowed' }}
+                {/* ⚡️ UPDATE: Green Download Button with Hover Effect */}
+                <button 
+                   onClick={handleDownloadClick}
+                   // Changed to btn-success for Green + Hover effect
+                   className="btn btn-success rounded-pill px-4 py-2 d-flex align-items-center gap-2"
+                   style={{ border: 'none' }} 
                 >
                   <FaDownload size={14} /> Download
-                </Button>
+                </button>
               </div>
 
               {showTrailer && trailerKey && (
@@ -331,7 +360,7 @@ const MovieDetailsPage = () => {
         </Container>
       </div>
 
-      {/* ⚡️ CAST ROW: Clickable Links Added Here */}
+      {/* CAST ROW */}
       {cast.length > 0 && (
         <Container className="mb-5 position-relative">
           <h4 className="mb-3 text-white fw-bold">Top Cast</h4>
@@ -345,7 +374,6 @@ const MovieDetailsPage = () => {
               style={{ gap: '16px', scrollbarWidth: 'none', msOverflowStyle: 'none', scrollBehavior: 'smooth' }}
             >
               {cast.slice(0, 15).map(person => (
-                // ⚡️ FIX: Wrapped in Link to /person/:id
                 <Link 
                   key={person.id} 
                   to={`/person/${person.id}`} 
